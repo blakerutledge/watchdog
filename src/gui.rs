@@ -3,7 +3,6 @@
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop, EventLoopBuilder};
 use winit::window::{Window, WindowBuilder};
-
 // use eframe::egui;
 
 use tray_icon::menu::{Menu, MenuEvent, MenuItem}; //, MenuItemExt, PredefinedMenuItem, Submenu},
@@ -35,7 +34,30 @@ impl MenuElement {
 impl Gui {
     pub fn new() -> Gui {
         let event_loop = EventLoopBuilder::with_user_event().build();
-        let window_builder = WindowBuilder::new().with_visible(false);
+
+        //
+        // - - - ICON
+        //
+        const ICON_IMAGE_DATA: &[u8] = include_bytes!("../assets/icons/watchdog-logo.png");
+        let (icon_rgba, icon_width, icon_height) = {
+            let image = image::load_from_memory(ICON_IMAGE_DATA)
+                .expect("Failed to open icon path")
+                .into_rgba8();
+            let (width, height) = image.dimensions();
+            let rgba = image.into_raw();
+            (rgba, width, height)
+        };
+        let window_icon =
+            winit::window::Icon::from_rgba(icon_rgba.clone(), icon_width, icon_height)
+                .expect("Failed to open window icon");
+
+        let tray_icon = tray_icon::icon::Icon::from_rgba(icon_rgba, icon_width, icon_height)
+            .expect("Failed to open tray icon");
+
+        let window_builder = WindowBuilder::new()
+            .with_visible(false)
+            .with_title("Watchdog")
+            .with_window_icon(Some(window_icon));
 
         let window = window_builder.build(&event_loop).unwrap();
 
@@ -58,15 +80,11 @@ impl Gui {
         menu_elements.push(close);
         menu_elements.push(exit);
 
-        // icon
-        let path = std::path::Path::new("./assets/images/watchdog-logo.png");
-        dbg!(path);
-        let icon = load_icon(path);
         // tray entity
         let tray = TrayIconBuilder::new()
             .with_menu(menu)
             .with_tooltip("Watchdog")
-            .with_icon(icon)
+            .with_icon(tray_icon)
             .build()
             .unwrap();
 
@@ -100,50 +118,22 @@ impl Gui {
     }
 
     fn open_window(&mut self, _: &mut ControlFlow) {
-        println!("TODO: Open Window, {:?}", self.window);
         self.window.set_visible(true);
     }
 
     fn close_window(&mut self, _: &mut ControlFlow) {
-        println!("TODO: Close Window");
         self.window.set_visible(false);
     }
 
-    fn exit(&mut self, control_flow: &mut ControlFlow) {
+    fn hide_tray_icon(&mut self) {
         self.tray.set_visible(false).unwrap();
+    }
+
+    fn exit(&mut self, control_flow: &mut ControlFlow) {
+        self.hide_tray_icon();
         *control_flow = ControlFlow::Exit;
     }
 }
-
-fn load_icon(path: &std::path::Path) -> tray_icon::icon::Icon {
-    let (icon_rgba, icon_width, icon_height) = {
-        let image = image::open(path)
-            .expect("Failed to open icon path")
-            .into_rgba8();
-        let (width, height) = image.dimensions();
-        let rgba = image.into_raw();
-        (rgba, width, height)
-    };
-    tray_icon::icon::Icon::from_rgba(icon_rgba, icon_width, icon_height)
-        .expect("Failed to open icon")
-}
-
-// fn open_window() {
-//     let event_loop = EventLoop::new();
-//     let window = WindowBuilder::new().build(&event_loop).unwrap();
-//     event_loop.run(move |event, _, control_flow| {
-//         *control_flow = ControlFlow::Wait;
-
-//         // exit
-//         match event {
-//             Event::WindowEvent {
-//                 event: WindowEvent::CloseRequested,
-//                 window_id,
-//             } if window_id == window.id() => *control_flow = ControlFlow::Exit,
-//             _ => (),
-//         }
-//     });
-// }
 
 // fn init_gui() -> eframe::Result<()> {
 //     // Our application state:

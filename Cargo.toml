@@ -13,3 +13,6 @@ muda = "0.5.0"
 tray-icon = "0.5.1"
 windows-sys = "0.48.0"
 winit = "0.28.6"
+
+[build-dependencies]
+winres = "0.1.12"
