@@ -1,16 +1,14 @@
 // - - - IMPORTS - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 use std::collections::HashMap;
-use std::hash::Hash;
 
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop, EventLoopBuilder};
 use winit::window::{Window, WindowBuilder};
+
 // use eframe::egui;
 
-use tray_icon::menu::{Menu, MenuEvent, MenuItem}; //, MenuItemExt, PredefinedMenuItem, Submenu},
-use tray_icon::TrayIcon;
-use tray_icon::TrayIconBuilder;
-// use tray_icon::TrayEvent;
+use tray_icon::menu::{CheckMenuItem, IconMenuItem, Menu, MenuEvent, MenuItem, MenuItemType}; //, MenuItemExt, PredefinedMenuItem, Submenu},
+use tray_icon::{ClickEvent, TrayEvent, TrayIcon, TrayIconBuilder};
 
 pub struct Gui {
     pub event_loop: Option<EventLoop<()>>,
@@ -68,19 +66,18 @@ impl Gui {
         //
         // menu
         let menu = Box::new(Menu::new());
-        // let mut menu_elements: Vec<MenuElement> = Vec::new();
 
-        let open = MenuElement::new("Open Window", true, Gui::open_window);
-        let close = MenuElement::new("Close Window", true, Gui::close_window);
+        // let open = MenuElement::new("Open Window", true, Gui::open_window);
+        // let close = MenuElement::new("Close Window", true, Gui::close_window);
         let exit = MenuElement::new("Exit", true, Gui::exit);
 
-        menu.append(&open.item.clone());
-        menu.append(&close.item.clone());
+        // menu.append(&open.item.clone());
+        // menu.append(&close.item.clone());
         menu.append(&exit.item.clone());
 
         let mut menu_elements = HashMap::new();
-        menu_elements.insert(String::from("open"), open);
-        menu_elements.insert(String::from("close"), close);
+        // menu_elements.insert(String::from("open"), open);
+        // menu_elements.insert(String::from("close"), close);
         menu_elements.insert(String::from("exit"), exit);
 
         // tray entity
@@ -100,9 +97,16 @@ impl Gui {
     }
 
     pub fn update<T>(&mut self, event: Event<'_, T>, control_flow: &mut ControlFlow) {
-        *control_flow = ControlFlow::Wait;
+        *control_flow = ControlFlow::Poll;
 
-        if let Ok(event) = MenuEvent::receiver().try_recv() {
+        // Tray Event
+        if let Ok(event) = TrayEvent::receiver().try_recv() {
+            if event.event == ClickEvent::Left {
+                self.open_window(control_flow);
+            }
+        }
+        // Tray Menu Event
+        else if let Ok(event) = MenuEvent::receiver().try_recv() {
             for (_key, element) in &self.menu_elements {
                 if element.id == event.id {
                     (element.handler)(self, control_flow);
@@ -111,6 +115,7 @@ impl Gui {
             }
         }
 
+        // Window Event
         match event {
             Event::WindowEvent {
                 event: WindowEvent::CloseRequested,
@@ -122,39 +127,14 @@ impl Gui {
 
     fn open_window(&mut self, _: &mut ControlFlow) {
         self.window.set_visible(true);
-        self.menu_elements
-            .get("close")
-            .unwrap()
-            .item
-            .set_enabled(true);
-        self.menu_elements
-            .get("open")
-            .unwrap()
-            .item
-            .set_enabled(false);
+        self.window.focus_window();
     }
 
     fn close_window(&mut self, _: &mut ControlFlow) {
         self.window.set_visible(false);
-        self.menu_elements
-            .get("close")
-            .unwrap()
-            .item
-            .set_enabled(false);
-        self.menu_elements
-            .get("open")
-            .unwrap()
-            .item
-            .set_enabled(true);
-        // self.menu_elements.open.item.set_enabled(true);
-    }
-
-    fn hide_tray_icon(&mut self) {
-        self.tray.set_visible(false).unwrap();
     }
 
     fn exit(&mut self, control_flow: &mut ControlFlow) {
-        self.hide_tray_icon();
         *control_flow = ControlFlow::Exit;
     }
 }
