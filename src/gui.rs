@@ -1,4 +1,6 @@
 // - - - IMPORTS - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+use std::collections::HashMap;
+use std::hash::Hash;
 
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop, EventLoopBuilder};
@@ -13,7 +15,7 @@ use tray_icon::TrayIconBuilder;
 pub struct Gui {
     pub event_loop: Option<EventLoop<()>>,
     tray: TrayIcon,
-    menu_elements: Vec<MenuElement>,
+    menu_elements: HashMap<String, MenuElement>,
     window: Window,
 }
 
@@ -66,7 +68,7 @@ impl Gui {
         //
         // menu
         let menu = Box::new(Menu::new());
-        let mut menu_elements: Vec<MenuElement> = Vec::new();
+        // let mut menu_elements: Vec<MenuElement> = Vec::new();
 
         let open = MenuElement::new("Open Window", true, Gui::open_window);
         let close = MenuElement::new("Close Window", true, Gui::close_window);
@@ -76,9 +78,10 @@ impl Gui {
         menu.append(&close.item.clone());
         menu.append(&exit.item.clone());
 
-        menu_elements.push(open);
-        menu_elements.push(close);
-        menu_elements.push(exit);
+        let mut menu_elements = HashMap::new();
+        menu_elements.insert(String::from("open"), open);
+        menu_elements.insert(String::from("close"), close);
+        menu_elements.insert(String::from("exit"), exit);
 
         // tray entity
         let tray = TrayIconBuilder::new()
@@ -100,9 +103,9 @@ impl Gui {
         *control_flow = ControlFlow::Wait;
 
         if let Ok(event) = MenuEvent::receiver().try_recv() {
-            for i in &self.menu_elements {
-                if i.id == event.id {
-                    (i.handler)(self, control_flow);
+            for (_key, element) in &self.menu_elements {
+                if element.id == event.id {
+                    (element.handler)(self, control_flow);
                     break;
                 }
             }
@@ -119,10 +122,31 @@ impl Gui {
 
     fn open_window(&mut self, _: &mut ControlFlow) {
         self.window.set_visible(true);
+        self.menu_elements
+            .get("close")
+            .unwrap()
+            .item
+            .set_enabled(true);
+        self.menu_elements
+            .get("open")
+            .unwrap()
+            .item
+            .set_enabled(false);
     }
 
     fn close_window(&mut self, _: &mut ControlFlow) {
         self.window.set_visible(false);
+        self.menu_elements
+            .get("close")
+            .unwrap()
+            .item
+            .set_enabled(false);
+        self.menu_elements
+            .get("open")
+            .unwrap()
+            .item
+            .set_enabled(true);
+        // self.menu_elements.open.item.set_enabled(true);
     }
 
     fn hide_tray_icon(&mut self) {
