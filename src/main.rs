@@ -99,7 +99,7 @@ impl WatchdogApp {
     }
 
     fn update<T>(&self, event: Event<'_, T>, control_flow: &mut ControlFlow) {
-        *control_flow = ControlFlow::Poll;
+        *control_flow = ControlFlow::Wait;
 
         if let Ok(event) = MenuEvent::receiver().try_recv() {
             for i in &self.menu_elements {
@@ -119,8 +119,6 @@ impl WatchdogApp {
             _ => {}
         }
     }
-
-    fn close_window() {}
 }
 
 fn main() {
@@ -130,70 +128,7 @@ fn main() {
         .take()
         .unwrap()
         .run(move |event, _, control_flow| app.update(event, control_flow))
-
-    //     *control_flow = ControlFlow::Wait;
-
-    //     if let Ok(event) = MenuEvent::receiver().try_recv() {
-    //         // TO DO need scope fixed like everywhere ?
-
-    //         //     if event.id == menu_item_open.id() {
-    //         //         println!("open")s
-    //         //     } else if event.id == menu_item_exit.id() {
-    //         //         println!("close")
-    //         //     }
-    //         // }
-    //         println!("{:?}", event.id);
-    //     }
-    // });
-
-    /*
-    app.window_loop.run(move |event, _, control_flow| {
-        *control_flow = ControlFlow::Wait;
-
-        // exit
-        match event {
-            Event::WindowEvent {
-                event: WindowEvent::CloseRequested,
-                window_id,
-            } if window_id == window.id() => *control_flow = ControlFlow::Exit,
-            _ => (),
-        }
-    });
-    */
 }
-
-// fn init_loop() -> EventLoop<()> {
-// let event_loop_builder = EventLoopBuilder::new();
-// event_loop_builder.build();
-
-// EventLoop::new();
-
-/*
-event_loop.run(move |event, _, control_flow| {
-    *control_flow = ControlFlow::Wait;
-
-    // if let Ok(event) = TrayEvent::receiver().try_recv() {
-    //     println!("raw event: {:?}", event);
-    // }
-
-    // match Some(event) {
-    // println!("{}", &menu_item_open.id());
-    // &menu_item_close.id() => println!("close")
-    // }
-
-    // if let Ok(event) = TrayEvent::receiver().try_recv() {
-    //     println!("tray event: {:?}", event);
-    // }
-
-    // if let Ok(event) = MenuEvent::receiver().try_recv() {
-    //     if event.id == menu_item_open.id() {
-    //         println!("open")s
-    //     } else if event.id == menu_item_exit.id() {
-    //         println!("close")
-    //     }
-    // }
-});
-*/
 
 // fn open_window() {
 //     let event_loop = EventLoop::new();
