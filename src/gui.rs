@@ -13,7 +13,7 @@ use tray_icon::TrayIconBuilder;
 
 pub struct Gui {
     pub event_loop: Option<EventLoop<()>>,
-    _tray: TrayIcon,
+    tray: TrayIcon,
     menu_elements: Vec<MenuElement>,
     window: Window,
 }
@@ -21,11 +21,11 @@ pub struct Gui {
 struct MenuElement {
     id: u32,
     item: MenuItem,
-    handler: fn(&Gui),
+    handler: fn(&mut Gui, &mut ControlFlow),
 }
 
 impl MenuElement {
-    fn new(text: &str, active: bool, handler: fn(&Gui)) -> Self {
+    fn new(text: &str, active: bool, handler: fn(&mut Gui, &mut ControlFlow)) -> Self {
         let item = MenuItem::new(text, active, None);
         let id = item.id();
         MenuElement { id, item, handler }
@@ -35,31 +35,35 @@ impl MenuElement {
 impl Gui {
     pub fn new() -> Gui {
         let event_loop = EventLoopBuilder::with_user_event().build();
-        let window = WindowBuilder::new().build(&event_loop).unwrap();
-        window.set_visible(false);
-        let menu = Box::new(Menu::new());
-        let mut menu_elements: Vec<MenuElement> = Vec::new();
+        let window_builder = WindowBuilder::new().with_visible(false);
+
+        let window = window_builder.build(&event_loop).unwrap();
 
         //
         // - - - SYSTEM TRAY
         //
         // menu
+        let menu = Box::new(Menu::new());
+        let mut menu_elements: Vec<MenuElement> = Vec::new();
 
         let open = MenuElement::new("Open Window", true, Gui::open_window);
         let close = MenuElement::new("Close Window", true, Gui::close_window);
+        let exit = MenuElement::new("Exit", true, Gui::exit);
 
         menu.append(&open.item.clone());
         menu.append(&close.item.clone());
+        menu.append(&exit.item.clone());
 
         menu_elements.push(open);
         menu_elements.push(close);
+        menu_elements.push(exit);
 
         // icon
         let path = std::path::Path::new("./assets/images/watchdog-logo.png");
         dbg!(path);
         let icon = load_icon(path);
         // tray entity
-        let _tray = TrayIconBuilder::new()
+        let tray = TrayIconBuilder::new()
             .with_menu(menu)
             .with_tooltip("Watchdog")
             .with_icon(icon)
@@ -67,20 +71,21 @@ impl Gui {
             .unwrap();
 
         Gui {
-            _tray,
+            tray,
             menu_elements,
             event_loop: Some(event_loop),
             window,
         }
     }
 
-    pub fn update<T>(&self, event: Event<'_, T>, control_flow: &mut ControlFlow) {
+    pub fn update<T>(&mut self, event: Event<'_, T>, control_flow: &mut ControlFlow) {
         *control_flow = ControlFlow::Wait;
 
         if let Ok(event) = MenuEvent::receiver().try_recv() {
             for i in &self.menu_elements {
                 if i.id == event.id {
-                    (i.handler)(self);
+                    (i.handler)(self, control_flow);
+                    break;
                 }
             }
         }
@@ -89,21 +94,24 @@ impl Gui {
             Event::WindowEvent {
                 event: WindowEvent::CloseRequested,
                 ..
-            } => {
-                *control_flow = ControlFlow::Exit;
-            }
+            } => self.close_window(control_flow),
             _ => {}
         }
     }
 
-    fn open_window(&self) {
+    fn open_window(&mut self, _: &mut ControlFlow) {
         println!("TODO: Open Window, {:?}", self.window);
         self.window.set_visible(true);
     }
 
-    fn close_window(&self) {
+    fn close_window(&mut self, _: &mut ControlFlow) {
         println!("TODO: Close Window");
         self.window.set_visible(false);
+    }
+
+    fn exit(&mut self, control_flow: &mut ControlFlow) {
+        self.tray.set_visible(false).unwrap();
+        *control_flow = ControlFlow::Exit;
     }
 }
 
