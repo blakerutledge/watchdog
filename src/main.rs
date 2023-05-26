@@ -27,6 +27,7 @@ impl WatchdogApp {
 }
 
 fn main() {
-    let app = WatchdogApp::new();
+    let mut app = WatchdogApp::new();
+    app.gui.init_ui();
     app.start();
 }
