@@ -178,8 +178,8 @@ impl Gui {
 
         // Our application state:
         let state = State {
-            name: String::from("Arthur"),
-            age: 40,
+            name: String::from("Blake"),
+            age: 31,
         };
 
         Gui {
