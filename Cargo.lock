@@ -2733,6 +2733,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "216080ab382b992234dda86873c18d4c48358f5cfcb70fd693d7f6f2131b628b"
 
 [[package]]
+name = "rosc"
+version = "0.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b2e63d9e6b0d090be1485cf159b1e04c3973d2d3e1614963544ea2ff47a4a981"
+dependencies = [
+ "byteorder",
+ "nom",
+]
+
+[[package]]
 name = "rustc-demangle"
 version = "0.1.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3412,6 +3422,7 @@ dependencies = [
  "image",
  "muda",
  "pollster",
+ "rosc",
  "tray-icon",
  "wgpu",
  "windows-sys 0.48.0",

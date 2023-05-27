@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use winit::event_loop::{ControlFlow, EventLoop, EventLoopBuilder};
 
 mod config;
+mod osc_manager;
 mod renderer;
 mod state;
 mod tray_manager;
@@ -28,6 +29,8 @@ pub fn init() {
     // Create the shared state object
     let mut state = state::init();
 
+    let mut osc = osc_manager::init();
+
     // Create the UI
     let mut ui_draw_call = ui::init();
 
@@ -36,10 +39,10 @@ pub fn init() {
         update(
             &event,
             control_flow,
-            &mut renderer,
-            &mut tray,
             &window,
             &tray_menu,
+            &mut tray,
+            &mut renderer,
             &mut ui_draw_call,
             &mut state,
         )
@@ -52,10 +55,10 @@ pub fn init() {
 fn update(
     event: &winit::event::Event<'_, ()>,
     control_flow: &mut ControlFlow,
-    renderer: &mut renderer::Renderer,
-    tray: &mut tray_icon::TrayIcon,
     window: &winit::window::Window,
     tray_menu: &HashMap<String, tray_manager::MenuElement>,
+    tray: &mut tray_icon::TrayIcon,
+    renderer: &mut renderer::Renderer,
     ui_draw_call: &mut Box<dyn FnMut(&egui::Context, &mut state::State)>,
     state: &mut state::State,
 ) {
@@ -75,12 +78,12 @@ fn update(
     // Apply any changes to the state
     apply(
         control_flow,
-        // renderer,
-        tray,
         window,
+        tray,
+        state,
+        // renderer,
         // tray_menu,
         // ui_draw_call,
-        state,
     );
 }
 
@@ -89,12 +92,12 @@ fn update(
 ///
 fn apply(
     control_flow: &mut ControlFlow,
-    // renderer: &mut renderer::Renderer,
-    tray: &mut tray_icon::TrayIcon,
     window: &winit::window::Window,
+    tray: &mut tray_icon::TrayIcon,
+    state: &mut state::State,
+    // renderer: &mut renderer::Renderer,
     // tray_menu: &HashMap<String, tray_manager::MenuElement>,
     // ui_draw_call: &mut Box<dyn FnMut(&egui::Context, &mut state::State)>,
-    state: &mut state::State,
 ) {
     // Application Exit has been requested
     if state.actions.app_exit {
