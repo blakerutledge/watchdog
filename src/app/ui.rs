@@ -8,6 +8,7 @@ pub fn init() -> Box<dyn FnMut(&egui::Context, &mut State)> {
             //
             ui.heading("Watchdog");
 
+            /*
             ui.horizontal(|ui| {
                 let name_label = ui.label("Your name: ");
                 ui.text_edit_singleline(&mut state.name)
@@ -21,9 +22,10 @@ pub fn init() -> Box<dyn FnMut(&egui::Context, &mut State)> {
             }
 
             ui.label(format!("Hello '{}', age {}", &state.name, &state.age,));
+            */
 
             if ui.button("Exit").clicked() {
-                state.action_exit = true
+                state.actions.app_exit = true
             }
         });
     })

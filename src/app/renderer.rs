@@ -13,6 +13,12 @@ pub struct Renderer {
     queue: Queue,
 }
 
+// The point of this module is to be extracted away and never need to be changed!
+
+// This is mostly example boilerplate from the guy who wrote the egui_winit platform integration
+// Seems to be an issue around the way this could work threaded... couple lines commented out and
+// noted inline below.
+
 pub fn init(window: &winit::window::Window) -> Renderer {
     let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
         backends: wgpu::Backends::all(),

@@ -1,17 +1,30 @@
+//
+// Define all state object properties
+//
 pub struct State {
-    pub age: u32,
-    pub name: String,
-    pub action_exit: bool,
-    pub action_window_close: bool,
-    pub action_window_open: bool,
+    // Action flags, can be set to true by any consumer of the state object,
+    // and will be actioned by the apply fn in app.rs
+    pub actions: Actions,
+    //
+    // Other stuff coming soon
+    //
 }
 
+pub struct Actions {
+    pub app_exit: bool,
+    pub window_close: bool,
+    pub window_open: bool,
+}
+
+//
+// Create state object, & initialize with defaults
+//
 pub fn init() -> State {
-    State {
-        name: String::from("Blake"),
-        age: 31,
-        action_exit: false,
-        action_window_close: false,
-        action_window_open: false,
-    }
+    let actions = Actions {
+        app_exit: false,
+        window_close: false,
+        window_open: false,
+    };
+
+    State { actions }
 }
