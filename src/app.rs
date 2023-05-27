@@ -59,45 +59,54 @@ fn update(
     ui_draw_call: &mut Box<dyn FnMut(&egui::Context, &mut state::State)>,
     state: &mut state::State,
 ) {
+    // Set to Poll instead of Wait on Windows so we can actually
+    // capture the tray left click event when it happens
     *control_flow = winit::event_loop::ControlFlow::Poll;
 
-    // Window update
-    window_manager::update();
+    // Window Manager Tick
+    window_manager::update(event, state);
+
+    // Tray Event Tick
+    tray_manager::update(tray_menu, state);
 
     // Draw UI
     renderer::update(event, window, renderer, ui_draw_call, state);
 
-    // Close Window
-    match event {
-        winit::event::Event::WindowEvent { event, .. } => match event {
-            winit::event::WindowEvent::CloseRequested => {
-                window_manager::close(window);
-            }
-            _ => {}
-        },
-        _ => {}
+    apply(
+        control_flow,
+        // renderer,
+        tray,
+        window,
+        // tray_menu,
+        // ui_draw_call,
+        state,
+    );
+}
+
+fn apply(
+    control_flow: &mut ControlFlow,
+    // renderer: &mut renderer::Renderer,
+    tray: &mut tray_icon::TrayIcon,
+    window: &winit::window::Window,
+    // tray_menu: &HashMap<String, tray_manager::MenuElement>,
+    // ui_draw_call: &mut Box<dyn FnMut(&egui::Context, &mut state::State)>,
+    state: &mut state::State,
+) {
+    // Application Exit has been requested
+    if state.action_exit {
+        state.action_exit = false;
+        exit(control_flow, tray, window);
     }
 
-    // Tray Event (Left click icon in tray)
-    if let Ok(event) = tray_icon::TrayEvent::receiver().try_recv() {
-        if event.event == tray_icon::ClickEvent::Left {
-            window_manager::open(window);
-        }
+    // Window Close has been requested
+    if state.action_window_close {
+        state.action_window_close = false;
+        window_manager::close(window);
     }
-    // Tray Menu Event (left click menu item, after right clicking to open menu)
-    else if let Ok(event) = tray_icon::menu::MenuEvent::receiver().try_recv() {
-        let instruction = tray_manager::test_handlers(tray_menu, event.id);
-        match instruction.as_str() {
-            "app/exit" => {
-                exit(control_flow, tray, window);
-            }
-            "app/instruction_not_mapped" => {
-                println!(
-                    "App Error: Menu Item with handle {:?} is not mapped to any action",
-                    instruction
-                );
-            }
-            _ => {}
-        }
+
+    // Window Open has been requested
+    if state.action_window_open {
+        state.action_window_open = false;
+        window_manager::open(window);
     }
 }

@@ -63,6 +63,33 @@ pub fn init() -> (TrayIcon, HashMap<String, MenuElement>) {
     (tray, menu_elements)
 }
 
+pub fn update(tray_menu: &HashMap<String, MenuElement>, state: &mut super::state::State) {
+    //
+    // Listen for left click on tray icon
+    if let Ok(event) = tray_icon::TrayEvent::receiver().try_recv() {
+        if event.event == tray_icon::ClickEvent::Left {
+            state.action_window_open = true
+        }
+    }
+    //
+    // Tray Menu Event (left click menu item, after right clicking to open menu)
+    else if let Ok(event) = tray_icon::menu::MenuEvent::receiver().try_recv() {
+        let instruction = test_handlers(tray_menu, event.id);
+        match instruction.as_str() {
+            "app/exit" => {
+                state.action_exit = true;
+            }
+            "app/instruction_not_mapped" => {
+                println!(
+                    "App Error: Menu Item with handle {:?} is not mapped to any action",
+                    instruction
+                );
+            }
+            _ => {}
+        }
+    }
+}
+
 pub fn on_exit(tray: &mut TrayIcon) {
     tray.set_visible(false).unwrap();
 }

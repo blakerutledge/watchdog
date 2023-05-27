@@ -1,8 +1,10 @@
 use winit::event_loop::EventLoop;
 use winit::window::{Window, WindowBuilder};
 
-const INITIAL_WIDTH: u32 = 1920;
-const INITIAL_HEIGHT: u32 = 1080;
+const INITIAL_WIDTH: u32 = 720;
+const INITIAL_HEIGHT: u32 = 1400;
+const MIN_WIDTH: u32 = 480;
+const MIN_HEIGHT: u32 = 800;
 
 pub fn init(event_loop: &EventLoop<()>) -> Window {
     //
@@ -32,6 +34,10 @@ pub fn init(event_loop: &EventLoop<()>) -> Window {
             width: INITIAL_WIDTH,
             height: INITIAL_HEIGHT,
         })
+        .with_min_inner_size(winit::dpi::PhysicalSize {
+            width: MIN_WIDTH,
+            height: MIN_HEIGHT,
+        })
         .build(event_loop)
         .unwrap();
 
@@ -44,7 +50,19 @@ pub fn open(window: &Window) {
     window.set_visible(true);
 }
 
-pub fn update() {}
+pub fn update(event: &winit::event::Event<'_, ()>, state: &mut super::state::State) {
+    // Close Window
+    match event {
+        winit::event::Event::WindowEvent { event, .. } => match event {
+            winit::event::WindowEvent::CloseRequested => {
+                // request window close via state object
+                state.action_window_close = true
+            }
+            _ => {}
+        },
+        _ => {}
+    }
+}
 
 pub fn on_exit(window: &Window) {
     window.set_visible(false);
