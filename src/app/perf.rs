@@ -52,10 +52,12 @@ pub fn finish_frame(state: &mut State) {
                     sum += ft.as_nanos() as f32 / 1e6;
                 }
             }
-            _ => {}
+            _ => {
+                println!("uncaught");
+            }
         }
     }
-    count = std::cmp::min(1, count); // dont divide by zero
+    count = std::cmp::max(1, count); // dont divide by zero
     let avg = sum / count as f32;
 
     // Update state objects

@@ -19,6 +19,8 @@ pub fn init() {
     // Create the shared state object
     let mut state = state::init();
 
+    let config = config::init(&mut state);
+
     let osc = osc_manager::init();
 
     // Create shared event loop for winit + egui + tray-icon events
@@ -49,6 +51,7 @@ pub fn init() {
             &mut tray,
             &mut renderer,
             &mut ui_draw_call,
+            &config,
             &mut state,
         )
     });
@@ -64,7 +67,8 @@ fn update(
     tray_menu: &HashMap<String, tray_manager::MenuElement>,
     tray: &mut tray_icon::TrayIcon,
     renderer: &mut renderer::Renderer,
-    ui_draw_call: &mut Box<dyn FnMut(&egui::Context, &mut state::State)>,
+    ui_draw_call: &mut Box<dyn FnMut(&egui::Context, &mut state::State, &config::Config)>,
+    config: &config::Config,
     state: &mut state::State,
 ) {
     // Set to Poll instead of Wait on Windows so we can actually
@@ -97,7 +101,7 @@ fn update(
         perf::start_frame(state);
 
         // Draw Window UI + affect state (immediate mode)
-        renderer::render(event, window, renderer, ui_draw_call, state);
+        renderer::render(event, window, renderer, ui_draw_call, state, config);
     }
 }
 

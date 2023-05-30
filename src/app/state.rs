@@ -11,7 +11,11 @@ pub struct State {
 
     // Stats for host Window rendering
     pub perf: Perf,
+
     // Watched App heartbeats
+
+    // Config status
+    pub json: Json,
 }
 
 pub struct Actions {
@@ -26,6 +30,13 @@ pub struct Perf {
     pub fps: u32,
     pub avg_frame_time: f32,
     pub monitor_refresh_rate: u32,
+}
+
+pub struct Json {
+    pub exists: bool,
+    pub parsed: bool,
+    pub dirty: bool,
+    pub filepath: Option<String>,
 }
 
 //
@@ -48,5 +59,16 @@ pub fn init() -> State {
         monitor_refresh_rate: 60,
     };
 
-    State { actions, perf }
+    let json = Json {
+        exists: false,
+        parsed: false,
+        dirty: false,
+        filepath: None,
+    };
+
+    State {
+        actions,
+        perf,
+        json,
+    }
 }

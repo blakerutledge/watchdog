@@ -1,0 +1,18 @@
+{
+    "email": {
+        "startup_success": [
+            "blake@blakerutledge.com"
+        ],
+        "startup_failure": [
+            "blake@blakerutledge.com"
+        ],
+        "non_responsive": [
+            "blake@blakerutledge.com"
+        ],
+        "email_limit_per_day": 3
+    },
+    "network": {
+        "client_listen_port": 1235,
+        "client_response_port": 1234
+    }
+}

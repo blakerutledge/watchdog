@@ -108,15 +108,14 @@ pub fn render(
     event: &winit::event::Event<'_, ()>,
     window: &winit::window::Window,
     renderer: &mut Renderer,
-    draw_ui: &mut Box<dyn FnMut(&egui::Context, &mut super::state::State)>,
+    draw_ui: &mut Box<dyn FnMut(&egui::Context, &mut super::state::State, &super::config::Config)>,
     state: &mut super::state::State,
+    config: &super::config::Config,
 ) {
     // Pass the winit events to the platform integration.
     let start_time = Instant::now();
     renderer.platform.handle_event(&event);
 
-    // match event {
-    //     winit::event::Event::RedrawRequested(..) => {
     renderer
         .platform
         .update_time(start_time.elapsed().as_secs_f64());
@@ -142,7 +141,7 @@ pub fn render(
     renderer.platform.begin_frame();
 
     // Draw the application
-    (draw_ui(&renderer.platform.context(), state));
+    (draw_ui(&renderer.platform.context(), state, config));
 
     // End the UI frame. We could now handle the output and draw the UI with the backend.
     let full_output = renderer.platform.end_frame(Some(window));
