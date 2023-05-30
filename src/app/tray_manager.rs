@@ -38,22 +38,19 @@ pub fn init() -> (TrayIcon, HashMap<String, MenuElement>) {
     // Init empty menu
     let menu = Box::new(Menu::new());
 
-    // let open = MenuElement::new("Open Window", true, Gui::open_window);
-    // let close = MenuElement::new("Close Window", true, Gui::close_window);
+    let open = MenuElement::new("Open Watchdog", true, String::from("window_open"));
     let exit = MenuElement::new("Exit", true, String::from("app_exit"));
 
-    // menu.append(&open.item.clone());
-    // menu.append(&close.item.clone());
+    menu.append(&open.item.clone());
     menu.append(&exit.item.clone());
 
     let mut tray_menu = HashMap::new();
-    // tray_menu.insert(String::from("open"), open);
-    // tray_menu.insert(String::from("close"), close);
+    tray_menu.insert(String::from("open"), open);
     tray_menu.insert(String::from("exit"), exit);
 
     // tray entity
     let tray = TrayIconBuilder::new()
-        .with_menu(menu)
+        // .with_menu(menu)
         .with_tooltip("Watchdog")
         .with_icon(tray_icon)
         .build()
@@ -81,6 +78,9 @@ pub fn update(tray_menu: &HashMap<String, MenuElement>, state: &mut super::state
         match instruction.as_str() {
             "app_exit" => {
                 state.actions.app_exit = true;
+            }
+            "window_open" => {
+                state.actions.window_open = true;
             }
             "app_instruction_not_mapped" => {
                 println!(

@@ -1,13 +1,15 @@
 use winit::event_loop::EventLoop;
 use winit::window::{Window, WindowBuilder};
 
+use super::state::State;
+
 // Set bounds for window dimensions
 const INITIAL_WIDTH: u32 = 720;
 const INITIAL_HEIGHT: u32 = 1400;
 const MIN_WIDTH: u32 = 480;
 const MIN_HEIGHT: u32 = 800;
 
-pub fn init(event_loop: &EventLoop<()>) -> Window {
+pub fn init(event_loop: &EventLoop<()>, state: &mut State) -> Window {
     //
     // Ingest raw image file, store in binary
     const ICON_IMAGE_DATA: &[u8] = include_bytes!("../../assets/icons/watchdog-logo.png");
@@ -29,8 +31,9 @@ pub fn init(event_loop: &EventLoop<()>) -> Window {
     //
     // Build Winit Window
     //
-    WindowBuilder::new()
-        .with_visible(false)
+    let w = WindowBuilder::new()
+        .with_visible(true)
+        .with_active(true)
         .with_title("Watchdog")
         .with_window_icon(Some(window_icon))
         .with_decorations(true)
@@ -45,7 +48,17 @@ pub fn init(event_loop: &EventLoop<()>) -> Window {
             height: MIN_HEIGHT,
         })
         .build(event_loop)
+        .unwrap();
+
+    let mhz = w
+        .current_monitor()
         .unwrap()
+        .refresh_rate_millihertz()
+        .unwrap_or(50000);
+
+    state.monitor_refresh_rate = mhz / 1e3 as u32;
+
+    w
 }
 
 // Update Loop, called from primary event loop in app.rs, test for user input
@@ -75,6 +88,7 @@ pub fn close(window: &Window) {
 // Open the window
 pub fn open(window: &Window) {
     window.set_visible(true);
+    window.focus_window();
 }
 
 // Clean up on app exit

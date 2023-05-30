@@ -3,6 +3,7 @@ use winit::event_loop::{ControlFlow, EventLoop, EventLoopBuilder};
 
 mod config;
 mod osc_manager;
+mod perf;
 mod renderer;
 mod state;
 mod tray_manager;
@@ -14,11 +15,16 @@ mod window_manager;
 ///
 pub fn init() {
     //
+    // Create the shared state object
+    let mut state = state::init();
+
+    let mut osc = osc_manager::init();
+
     // Create shared event loop for winit + egui + tray-icon events
     let event_loop: EventLoop<()> = EventLoopBuilder::with_user_event().build();
 
     // Create winit window
-    let window = window_manager::init(&event_loop);
+    let window = window_manager::init(&event_loop, &mut state);
 
     // Create renderer pipeline using WGPU backend, Winit, & Egui
     let mut renderer = renderer::init(&window);
@@ -26,13 +32,11 @@ pub fn init() {
     // Create system tray element, and (useable) list of menu items in the tray
     let (mut tray, tray_menu) = tray_manager::init();
 
-    // Create the shared state object
-    let mut state = state::init();
-
-    let mut osc = osc_manager::init();
-
     // Create the UI
     let mut ui_draw_call = ui::init();
+
+    // Initialize the performance tracker
+    perf::start_app(&mut state);
 
     // Begin the event loop, adding in top level
     event_loop.run(move |event, _, control_flow| {
@@ -72,8 +76,8 @@ fn update(
     // Tray Event update step, parse events and affect state
     tray_manager::update(tray_menu, state);
 
-    // Draw Window UI + affect state (immediate mode)
-    renderer::update(event, window, renderer, ui_draw_call, state);
+    // Renderer handles a few various winit events outside of redrawing
+    renderer::update(event, window, renderer);
 
     // Apply any changes to the state
     apply(
@@ -85,6 +89,15 @@ fn update(
         // tray_menu,
         // ui_draw_call,
     );
+
+    // Only draw as fast as the GPU says we should
+    let redraw = renderer::test_redraw(event, renderer);
+    if redraw {
+        perf::start_frame(state);
+
+        // Draw Window UI + affect state (immediate mode)
+        renderer::render(event, window, renderer, ui_draw_call, state);
+    }
 }
 
 ///

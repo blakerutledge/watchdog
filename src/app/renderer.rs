@@ -4,6 +4,8 @@ use egui_winit_platform::{Platform, PlatformDescriptor};
 use std::time::Instant;
 use wgpu::{Device, Queue, Surface, SurfaceConfiguration};
 
+use super::perf;
+
 pub struct Renderer {
     surface_config: SurfaceConfiguration,
     egui_rpass: RenderPass,
@@ -87,7 +89,22 @@ pub fn init(window: &winit::window::Window) -> Renderer {
     }
 }
 
-pub fn update(
+pub fn test_redraw(event: &winit::event::Event<'_, ()>, renderer: &mut Renderer) -> bool {
+    let mut ready = false;
+
+    renderer.platform.handle_event(&event);
+    match event {
+        winit::event::Event::RedrawRequested(..) => {
+            ready = true;
+        }
+        _ => {}
+    }
+
+    ready
+}
+
+// Only runs when we are redrawing
+pub fn render(
     event: &winit::event::Event<'_, ()>,
     window: &winit::window::Window,
     renderer: &mut Renderer,
@@ -98,88 +115,101 @@ pub fn update(
     let start_time = Instant::now();
     renderer.platform.handle_event(&event);
 
-    match event {
-        winit::event::Event::RedrawRequested(..) => {
-            renderer
-                .platform
-                .update_time(start_time.elapsed().as_secs_f64());
+    // match event {
+    //     winit::event::Event::RedrawRequested(..) => {
+    renderer
+        .platform
+        .update_time(start_time.elapsed().as_secs_f64());
 
-            let output_frame = match renderer.surface.get_current_texture() {
-                Ok(frame) => frame,
-                Err(wgpu::SurfaceError::Outdated) => {
-                    // This error occurs when the app is minimized on Windows.
-                    // Silently return here to prevent spamming the console with:
-                    // "The underlying surface has changed, and therefore the swap chain must be updated"
-                    return;
-                }
-                Err(e) => {
-                    eprintln!("Dropped frame with error: {}", e);
-                    return;
-                }
-            };
-            let output_view = output_frame
-                .texture
-                .create_view(&wgpu::TextureViewDescriptor::default());
-
-            // Begin to draw the UI frame.
-            renderer.platform.begin_frame();
-
-            // Draw the application
-            (draw_ui(&renderer.platform.context(), state));
-
-            // End the UI frame. We could now handle the output and draw the UI with the backend.
-            let full_output = renderer.platform.end_frame(Some(window));
-            let paint_jobs = renderer.platform.context().tessellate(full_output.shapes);
-
-            let mut encoder =
-                renderer
-                    .device
-                    .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                        label: Some("encoder"),
-                    });
-
-            // Upload all resources for the GPU.
-            let screen_descriptor = ScreenDescriptor {
-                physical_width: renderer.surface_config.width,
-                physical_height: renderer.surface_config.height,
-                scale_factor: window.scale_factor() as f32,
-            };
-            let tdelta = full_output.textures_delta;
-            renderer
-                .egui_rpass
-                .add_textures(&renderer.device, &renderer.queue, &tdelta)
-                .expect("add texture ok");
-            renderer.egui_rpass.update_buffers(
-                &renderer.device,
-                &renderer.queue,
-                &paint_jobs,
-                &screen_descriptor,
-            );
-
-            // Record all render passes.
-            renderer
-                .egui_rpass
-                .execute(
-                    &mut encoder,
-                    &output_view,
-                    &paint_jobs,
-                    &screen_descriptor,
-                    Some(wgpu::Color::BLACK),
-                )
-                .unwrap();
-
-            // Submit the commands.
-            renderer.queue.submit(std::iter::once(encoder.finish()));
-
-            // Redraw egui
-            output_frame.present();
-
-            renderer
-                .egui_rpass
-                .remove_textures(tdelta)
-                .expect("remove texture ok");
+    let output_frame = match renderer.surface.get_current_texture() {
+        Ok(frame) => frame,
+        Err(wgpu::SurfaceError::Outdated) => {
+            // This error occurs when the app is minimized on Windows.
+            // Silently return here to prevent spamming the console with:
+            // "The underlying surface has changed, and therefore the swap chain must be updated"
+            return;
         }
+        Err(e) => {
+            eprintln!("Dropped frame with error: {}", e);
+            return;
+        }
+    };
+    let output_view = output_frame
+        .texture
+        .create_view(&wgpu::TextureViewDescriptor::default());
 
+    // Begin to draw the UI frame.
+    renderer.platform.begin_frame();
+
+    // Draw the application
+    (draw_ui(&renderer.platform.context(), state));
+
+    // End the UI frame. We could now handle the output and draw the UI with the backend.
+    let full_output = renderer.platform.end_frame(Some(window));
+    let paint_jobs = renderer.platform.context().tessellate(full_output.shapes);
+
+    let mut encoder = renderer
+        .device
+        .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+            label: Some("encoder"),
+        });
+
+    // Upload all resources for the GPU.
+    let screen_descriptor = ScreenDescriptor {
+        physical_width: renderer.surface_config.width,
+        physical_height: renderer.surface_config.height,
+        scale_factor: window.scale_factor() as f32,
+    };
+    let tdelta = full_output.textures_delta;
+    renderer
+        .egui_rpass
+        .add_textures(&renderer.device, &renderer.queue, &tdelta)
+        .expect("add texture ok");
+    renderer.egui_rpass.update_buffers(
+        &renderer.device,
+        &renderer.queue,
+        &paint_jobs,
+        &screen_descriptor,
+    );
+
+    // Record all render passes.
+    renderer
+        .egui_rpass
+        .execute(
+            &mut encoder,
+            &output_view,
+            &paint_jobs,
+            &screen_descriptor,
+            Some(wgpu::Color::BLACK),
+        )
+        .unwrap();
+
+    // Submit the commands.
+    renderer.queue.submit(std::iter::once(encoder.finish()));
+
+    // Stop the timer, because from here we wait until the display is ready to go again
+    perf::finish_frame(state);
+
+    // Redraw egui
+    output_frame.present();
+
+    renderer
+        .egui_rpass
+        .remove_textures(tdelta)
+        .expect("remove texture ok");
+}
+
+// RUNS for all events in winit event loop
+pub fn update(
+    event: &winit::event::Event<'_, ()>,
+    window: &winit::window::Window,
+    renderer: &mut Renderer,
+) {
+    // Pass the winit events to the platform integration.
+    // let start_time = Instant::now();
+    renderer.platform.handle_event(&event);
+
+    match event {
         // Fix this to use threads
         // MainEventsCleared | UserEvent(Event::RequestRedraw) => {
         winit::event::Event::MainEventsCleared => {
