@@ -1,5 +1,7 @@
 use super::state::State;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use super::utils::now;
+
+use std::time::Duration;
 use std::{f32, u32};
 
 const MAX_FRAME_CACHE: usize = 300;
@@ -53,13 +55,4 @@ pub fn finish_frame(state: &mut State) {
     let avg = sum / count as f32;
     state.frames_per_second = std::cmp::min(count, state.monitor_refresh_rate);
     state.avg_frame_time = avg;
-}
-
-fn now() -> Duration {
-    let start = SystemTime::now();
-    let since_the_epoch = start
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or(Duration::from_secs(0));
-
-    since_the_epoch
 }

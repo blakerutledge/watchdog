@@ -8,6 +8,7 @@ mod renderer;
 mod state;
 mod tray_manager;
 mod ui;
+mod utils;
 mod window_manager;
 
 ///

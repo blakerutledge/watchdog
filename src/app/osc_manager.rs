@@ -1,8 +1,9 @@
 use rosc::{encoder, OscMessage, OscPacket, OscType};
-// use std::f32;
+
+use super::utils::now;
+
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4, UdpSocket};
 use std::str::FromStr;
-use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
@@ -29,60 +30,55 @@ pub fn init() {
     let host_err_str = format!("OSC failed to bind to {:?}", address_host);
     let socket_host = UdpSocket::bind(address_host).expect(&host_err_str);
 
-    let sock = Arc::new(Mutex::new(socket_host));
+    let socket_send = socket_host.try_clone().unwrap();
 
     println!("OSC Listening to {}", address_host);
 
-    // let (tx, rx) = mpsc::channel();
-
     // Heartbeat Sending thread
-    let send_sock = Arc::clone(&sock);
     thread::spawn(move || loop {
         {
-            println!("1: lock plz");
-            let locked_sock = send_sock.lock().unwrap();
-            println!("1: lock thx");
-            send_heartbeat(&locked_sock, &address_client);
-            println!("sending heartbeat");
-            std::mem::drop(locked_sock);
-            println!("1: drop");
+            send_heartbeat(&socket_send, &address_client);
+            println!("Sending heartbeat...");
         }
         thread::sleep(Duration::from_secs(2));
     });
 
     // Heartbeat Receiving thread
-    let recv_sock = Arc::clone(&sock);
     thread::spawn(move || {
         let mut buffer = [0u8; rosc::decoder::MTU];
         loop {
-            println!("2: lock plz");
-            let locked_sock = recv_sock.lock().unwrap();
-            println!("2: lock thx");
             let empty = (0 as usize, address_empty);
-            let msg: (usize, SocketAddr) = (locked_sock.recv_from(&mut buffer).unwrap_or(empty));
+            let msg: (usize, SocketAddr) = (socket_host.recv_from(&mut buffer).unwrap_or(empty));
             if msg.0 > 0 {
-                println!("Received packet with size {} from: {}", msg.0, msg.1);
                 let (_, packet) = rosc::decoder::decode_udp(&buffer[..msg.0]).unwrap();
                 handle_packet(packet);
             }
-            std::mem::drop(locked_sock);
-            println!("2: drop");
         }
-        // thread::sleep(Duration::from_millis(50));
     });
-
-    // send_thread.join().unwrap();
-    // recv_thread.join().unwrap();
 }
 
 fn handle_packet(packet: OscPacket) {
     match packet {
         OscPacket::Message(msg) => {
-            println!("OSC address: {}", msg.addr);
-            println!("OSC arguments: {:?}", msg.args);
+            if msg.addr == "/heart" {
+                receive_heartbeat();
+            } else {
+                receive_unexpected(msg);
+            }
         }
         OscPacket::Bundle(bundle) => {
-            println!("OSC Bundle: {:?}", bundle);
+            for p in bundle.content {
+                match p {
+                    OscPacket::Message(msg) => {
+                        if msg.addr == "/heart" {
+                            receive_heartbeat();
+                        } else {
+                            receive_unexpected(msg);
+                        }
+                    }
+                    _ => {}
+                }
+            }
         }
     }
 }
@@ -101,4 +97,12 @@ fn send_heartbeat(socket: &UdpSocket, to_addr: &SocketAddrV4) {
     send_message(socket, to_addr, "/heart".to_string());
 }
 
-fn receive_heartbeat() {}
+fn receive_heartbeat() {
+    println!("Receive heartbeat!");
+    println!("- - - - ");
+}
+
+fn receive_unexpected(msg: OscMessage) {
+    println!("Unhandled OSC address: {}", msg.addr);
+    println!("Unhandled OSC arguments: {:?}", msg.args);
+}
