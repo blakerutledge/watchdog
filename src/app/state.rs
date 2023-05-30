@@ -8,6 +8,7 @@ pub struct State {
     // Action flags, can be set to true by any consumer of the state object,
     // and will be actioned by the apply fn in app.rs
     pub actions: Actions,
+
     pub time_app_start: Duration,
     pub frames: VecDeque<Frame>,
     pub frames_per_second: u32,

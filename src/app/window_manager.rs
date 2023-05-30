@@ -88,6 +88,7 @@ pub fn close(window: &Window) {
 // Open the window
 pub fn open(window: &Window) {
     window.set_visible(true);
+    window.focus_window();
 }
 
 // Clean up on app exit
