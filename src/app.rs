@@ -19,7 +19,7 @@ pub fn init() {
     // Create the shared state object
     let mut state = state::init();
 
-    let mut osc = osc_manager::init();
+    let osc = osc_manager::init();
 
     // Create shared event loop for winit + egui + tray-icon events
     let event_loop: EventLoop<()> = EventLoopBuilder::with_user_event().build();
