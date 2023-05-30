@@ -56,7 +56,7 @@ pub fn init(event_loop: &EventLoop<()>, state: &mut State) -> Window {
         .refresh_rate_millihertz()
         .unwrap_or(50000);
 
-    state.monitor_refresh_rate = mhz / 1e3 as u32;
+    state.perf.monitor_refresh_rate = mhz / 1e3 as u32;
 
     w
 }

@@ -12,7 +12,7 @@ pub struct Frame {
 }
 
 pub fn start_app(state: &mut State) {
-    state.time_app_start = now();
+    state.perf.start_time = now();
 }
 
 pub fn start_frame(state: &mut State) {
@@ -24,22 +24,25 @@ pub fn start_frame(state: &mut State) {
     };
 
     // Add to the list
-    state.frames.push_back(f);
+    state.perf.frames.push_back(f);
 
     // Ensure the list is below max length, removing oldest elements
-    while state.frames.len() >= MAX_FRAME_CACHE {
-        state.frames.pop_front();
+    while state.perf.frames.len() >= MAX_FRAME_CACHE {
+        state.perf.frames.pop_front();
     }
 }
 
 pub fn finish_frame(state: &mut State) {
-    // Update the most recent frame's completion time
+    // Update the current frame's completion time
     let n = now();
-    let i = state.frames.len();
-    state.frames[i - 1].stop = n;
+    let i = state.perf.frames.len();
+    state.perf.frames[i - 1].stop = n;
+
+    // Calc the number of frames rendered within the past 1 second,
+    // while also averaging he render times of all frames in the past second
     let mut count = 0 as u32;
     let mut sum = 0 as f32;
-    for f in &state.frames {
+    for f in &state.perf.frames {
         let diff = n.checked_sub(f.stop);
         let ft = f.stop.checked_sub(f.start).unwrap_or_default();
         match diff {
@@ -52,7 +55,13 @@ pub fn finish_frame(state: &mut State) {
             _ => {}
         }
     }
+    count = std::cmp::min(1, count); // dont divide by zero
     let avg = sum / count as f32;
-    state.frames_per_second = std::cmp::min(count, state.monitor_refresh_rate);
-    state.avg_frame_time = avg;
+
+    // Update state objects
+    state.perf.avg_frame_time = avg;
+
+    // This likes to flicker between 60/61 fps, keep it sane, limited
+    // to the monitor refresh rate
+    state.perf.fps = std::cmp::min(count, state.perf.monitor_refresh_rate);
 }

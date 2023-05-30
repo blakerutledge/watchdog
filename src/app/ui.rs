@@ -23,26 +23,29 @@ pub fn init() -> Box<dyn FnMut(&egui::Context, &mut State)> {
             }
 
             */
-            ui.label(format!("FPS: {}", state.frames_per_second));
 
-            if state.frames.len() >= 2 {
-                // Render previous frame's stats, this frame
-                let i = state.frames.len() - 2;
-                let diff = state.frames[i].stop.checked_sub(state.frames[i].start);
+            ui.label(format!("FPS: {}", state.perf.fps));
+
+            // If there is only one frame in the list, it is partilly completed,
+            // and does not yet have a frame.stop time that we can use. The first frame is
+            // currently being rendered!
+            let mut frametime = format_ms(0.0);
+            if state.perf.frames.len() >= 2 {
+                // Render the previous frame's stats, this frame
+                let f = &state.perf.frames[state.perf.frames.len() - 2];
+                let diff = f.stop.checked_sub(f.start);
                 match diff {
                     Some(diff) => {
-                        let ft_f = diff.as_nanos() as f32 / 1e6;
-                        ui.label(format!("Frame Time: {} ms", format_ms(ft_f)));
+                        frametime = format_ms(diff.as_nanos() as f32 / 1e6);
                     }
-                    _ => {
-                        ui.label(format!("Frame Time: x.x ms"));
-                    }
+                    _ => {}
                 }
             }
+            ui.label(format!("Frame Time: {} ms", frametime));
 
             ui.label(format!(
                 "Avg Frame Time: {}ms",
-                format_ms(state.avg_frame_time)
+                format_ms(state.perf.avg_frame_time)
             ));
 
             if ui.button("Exit").clicked() {
