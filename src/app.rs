@@ -21,7 +21,7 @@ pub fn init() {
 
     let config = config::init(&mut state);
 
-    let osc = osc_manager::init();
+    // let osc = osc_manager::init();
 
     // Create shared event loop for winit + egui + tray-icon events
     let event_loop: EventLoop<()> = EventLoopBuilder::with_user_event().build();

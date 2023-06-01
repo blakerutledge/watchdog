@@ -1,4 +1,5 @@
 use super::perf::Frame;
+use std::collections::HashMap;
 use std::{collections::VecDeque, time::Duration};
 
 //
@@ -11,6 +12,9 @@ pub struct State {
 
     // Stats for host Window rendering
     pub perf: Perf,
+
+    // Ui
+    pub ui: UiState,
 
     // Watched App heartbeats
 
@@ -30,6 +34,10 @@ pub struct Perf {
     pub fps: u32,
     pub avg_frame_time: f32,
     pub monitor_refresh_rate: u32,
+}
+
+pub struct UiState {
+    pub textures: HashMap<String, (egui::Vec2, egui::TextureHandle)>,
 }
 
 pub struct Json {
@@ -66,9 +74,14 @@ pub fn init() -> State {
         filepath: None,
     };
 
+    let ui = UiState {
+        textures: HashMap::new(),
+    };
+
     State {
         actions,
         perf,
+        ui,
         json,
     }
 }
