@@ -5,7 +5,7 @@ use super::state::State;
 
 // Set bounds for window dimensions
 const INITIAL_WIDTH: u32 = 720;
-const INITIAL_HEIGHT: u32 = 1400;
+const INITIAL_HEIGHT: u32 = 1024;
 const MIN_WIDTH: u32 = 480;
 const MIN_HEIGHT: u32 = 800;
 

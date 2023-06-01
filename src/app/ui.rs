@@ -39,27 +39,46 @@ pub fn init() -> Box<dyn FnMut(&egui::Context, &mut State, &Config)> {
                 */
             }
 
-            egui::TopBottomPanel::top("my_panel").show(context, |ui| {
-                let icon_config = state.ui.textures.get("icon_config").unwrap();
-                let icon_play = state.ui.textures.get("icon_play").unwrap();
-                let icon_stats = state.ui.textures.get("icon_stats").unwrap();
-                let icon_exit = state.ui.textures.get("icon_exit").unwrap();
+            egui::SidePanel::left("nav_bar")
+                .exact_width(52.0)
+                .frame(
+                    egui::Frame::none()
+                        .fill(egui::Color32::from_rgb(28, 28, 28))
+                        .inner_margin(12.0),
+                )
+                .resizable(false)
+                .show_separator_line(false)
+                .show(context, |ui| {
+                    ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
+                        // ui.vertical(|ui| {
+                        let icon_config = state.ui.textures.get("icon_config").unwrap();
+                        let icon_play = state.ui.textures.get("icon_play").unwrap();
+                        let icon_stats = state.ui.textures.get("icon_stats").unwrap();
+                        let icon_exit = state.ui.textures.get("icon_exit").unwrap();
 
-                ui.add(egui::ImageButton::new(
-                    &icon_config.1,
-                    Vec2::new(40.0, 40.0),
-                ));
-                ui.add(egui::ImageButton::new(&icon_play.1, Vec2::new(40.0, 40.0)));
-                ui.add(egui::ImageButton::new(&icon_stats.1, Vec2::new(40.0, 40.0)));
-                ui.add(egui::ImageButton::new(&icon_exit.1, Vec2::new(40.0, 40.0)));
-            });
+                        let icon_w = 40.0;
+                        let icon_w2 = Vec2::new(icon_w, icon_w);
+
+                        // ui.visuals_mut().button_frame = false;
+                        // ui.visuals_mut().faint_bg_color = egui::Color32::from_rgb(28, 28, 28);
+
+                        ui.image(&icon_config.1, icon_w2)
+                            .on_hover_cursor(egui::CursorIcon::PointingHand)
+                            .enabled();
+
+                        // .sense(egui::Sense {
+                        //     click: true,
+                        //     drag: false,
+                        //     focusable: false,
+                        // });
+                        ui.add(egui::ImageButton::new(&icon_play.1, icon_w2));
+                        ui.add(egui::ImageButton::new(&icon_stats.1, icon_w2));
+                        ui.add_space(ui.available_height() - icon_w - 12.0);
+                        ui.add(egui::ImageButton::new(&icon_exit.1, icon_w2));
+                    })
+                });
 
             egui::CentralPanel::default().show(context, |ui| {
-                //
-                // User Interface defined here
-                //
-                ui.heading("Watchdog");
-
                 //
                 // host perf
                 //
@@ -167,11 +186,8 @@ fn create_tex(image_data: &[u8], slug: &str, context: &egui::Context, state: &mu
 
     let i = egui::ColorImage::from_rgba_unmultiplied(size, pixels.as_slice());
 
-    state.ui.textures.insert(
-        slug.to_string(),
-        (
-            egui::Vec2::new(size[0] as f32, size[1] as f32),
-            context.load_texture(slug, i, Default::default()),
-        ),
-    );
+    let raw_size = egui::Vec2::new(size[0] as f32, size[1] as f32);
+    let tex = context.load_texture(slug, i, Default::default());
+
+    state.ui.textures.insert(slug.to_string(), (raw_size, tex));
 }
