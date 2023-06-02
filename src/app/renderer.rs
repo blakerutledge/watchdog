@@ -108,7 +108,14 @@ pub fn render(
     event: &winit::event::Event<'_, ()>,
     window: &winit::window::Window,
     renderer: &mut Renderer,
-    draw_ui: &mut Box<dyn FnMut(&egui::Context, &mut super::state::State, &super::config::Config)>,
+    draw_ui: &mut Box<
+        dyn FnMut(
+            &egui::Context,
+            &mut super::state::State,
+            &super::config::Config,
+            &winit::window::Window,
+        ),
+    >,
     state: &mut super::state::State,
     config: &super::config::Config,
 ) {
@@ -141,7 +148,7 @@ pub fn render(
     renderer.platform.begin_frame();
 
     // Draw the application
-    (draw_ui(&renderer.platform.context(), state, config));
+    (draw_ui(&renderer.platform.context(), state, config, window));
 
     // End the UI frame. We could now handle the output and draw the UI with the backend.
     let full_output = renderer.platform.end_frame(Some(window));

@@ -67,7 +67,9 @@ fn update(
     tray_menu: &HashMap<String, tray_manager::MenuElement>,
     tray: &mut tray_icon::TrayIcon,
     renderer: &mut renderer::Renderer,
-    ui_draw_call: &mut Box<dyn FnMut(&egui::Context, &mut state::State, &config::Config)>,
+    ui_draw_call: &mut Box<
+        dyn FnMut(&egui::Context, &mut state::State, &config::Config, &winit::window::Window),
+    >,
     config: &config::Config,
     state: &mut state::State,
 ) {
@@ -75,14 +77,14 @@ fn update(
     // capture the tray left click event when it happens
     *control_flow = winit::event_loop::ControlFlow::Poll;
 
+    // Renderer handles a few various winit events outside of redrawing
+    renderer::update(event, window, renderer);
+
     // Window Manager update step, parse events and affect state
-    window_manager::update(event, state);
+    window_manager::update(event, window, state);
 
     // Tray Event update step, parse events and affect state
     tray_manager::update(tray_menu, state);
-
-    // Renderer handles a few various winit events outside of redrawing
-    renderer::update(event, window, renderer);
 
     // Apply any changes to the state
     apply(

@@ -4,10 +4,10 @@ use winit::window::{Window, WindowBuilder};
 use super::state::State;
 
 // Set bounds for window dimensions
-const INITIAL_WIDTH: u32 = 720;
-const INITIAL_HEIGHT: u32 = 1024;
+const INITIAL_WIDTH: u32 = 540;
+const INITIAL_HEIGHT: u32 = 800;
 const MIN_WIDTH: u32 = 480;
-const MIN_HEIGHT: u32 = 800;
+const MIN_HEIGHT: u32 = 600;
 
 pub fn init(event_loop: &EventLoop<()>, state: &mut State) -> Window {
     //
@@ -36,14 +36,14 @@ pub fn init(event_loop: &EventLoop<()>, state: &mut State) -> Window {
         .with_active(true)
         .with_title("Watchdog")
         .with_window_icon(Some(window_icon))
-        .with_decorations(true)
+        .with_decorations(false)
         .with_resizable(true)
         .with_transparent(false)
-        .with_inner_size(winit::dpi::PhysicalSize {
+        .with_inner_size(winit::dpi::LogicalSize {
             width: INITIAL_WIDTH,
             height: INITIAL_HEIGHT,
         })
-        .with_min_inner_size(winit::dpi::PhysicalSize {
+        .with_min_inner_size(winit::dpi::LogicalSize {
             width: MIN_WIDTH,
             height: MIN_HEIGHT,
         })
@@ -62,7 +62,11 @@ pub fn init(event_loop: &EventLoop<()>, state: &mut State) -> Window {
 }
 
 // Update Loop, called from primary event loop in app.rs, test for user input
-pub fn update(event: &winit::event::Event<'_, ()>, state: &mut super::state::State) {
+pub fn update(
+    event: &winit::event::Event<'_, ()>,
+    window: &winit::window::Window,
+    state: &mut super::state::State,
+) {
     match event {
         winit::event::Event::WindowEvent { event, .. } => match event {
             //
@@ -71,6 +75,7 @@ pub fn update(event: &winit::event::Event<'_, ()>, state: &mut super::state::Sta
                 // request window close via state object
                 state.actions.window_close = true
             }
+
             //
             // Maybe other things here
             //

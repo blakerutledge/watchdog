@@ -38,6 +38,7 @@ pub struct Perf {
 
 pub struct UiState {
     pub textures: HashMap<String, (egui::Vec2, egui::TextureHandle)>,
+    pub custom_fonts: bool,
 }
 
 pub struct Json {
@@ -76,6 +77,7 @@ pub fn init() -> State {
 
     let ui = UiState {
         textures: HashMap::new(),
+        custom_fonts: false,
     };
 
     State {
