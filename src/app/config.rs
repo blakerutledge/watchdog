@@ -29,8 +29,11 @@ pub struct Network {
 }
 
 pub fn init(state: &mut State) -> Config {
-    let filepath = "./assets/config.json";
-    let config_json = std::fs::read_to_string(filepath).expect("failed to read json config file");
+    let filepath = "../../assets/config.json";
+    let default_data = include_str!("../../assets/config.json").to_string();
+
+    // let config_json = std::fs::read_to_string(filepath).expect("failed to read json config file");
+    let config_json = default_data;
     state.json.exists = true;
     state.json.filepath = Some(String::from(filepath));
 

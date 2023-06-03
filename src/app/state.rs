@@ -1,6 +1,7 @@
 use super::perf::Frame;
 use std::collections::HashMap;
-use std::{collections::VecDeque, time::Duration};
+use std::collections::VecDeque;
+use std::time::Duration;
 
 //
 // Define all state object properties, nested into categories
@@ -26,6 +27,9 @@ pub struct Actions {
     pub app_exit: bool,
     pub window_close: bool,
     pub window_open: bool,
+    pub window_minimize: bool,
+    pub window_maximize: bool,
+    pub window_unmaximize: bool,
 }
 
 pub struct Perf {
@@ -39,6 +43,10 @@ pub struct Perf {
 pub struct UiState {
     pub textures: HashMap<String, (egui::Vec2, egui::TextureHandle)>,
     pub custom_fonts: bool,
+    pub active_tab: TabState,
+    pub show_exit_tooltip: bool,
+    pub overlay_exit: bool,
+    pub title_bar_time_last_click: Duration,
 }
 
 pub struct Json {
@@ -46,6 +54,12 @@ pub struct Json {
     pub parsed: bool,
     pub dirty: bool,
     pub filepath: Option<String>,
+}
+
+pub enum TabState {
+    Config,
+    Play,
+    Stats,
 }
 
 //
@@ -58,6 +72,9 @@ pub fn init() -> State {
         app_exit: false,
         window_close: false,
         window_open: false,
+        window_minimize: false,
+        window_maximize: false,
+        window_unmaximize: false,
     };
 
     let perf = Perf {
@@ -78,6 +95,13 @@ pub fn init() -> State {
     let ui = UiState {
         textures: HashMap::new(),
         custom_fonts: false,
+        // tab_config: true,
+        // tab_play: false,
+        // tab_stats: false,
+        active_tab: TabState::Config,
+        show_exit_tooltip: false,
+        overlay_exit: false,
+        title_bar_time_last_click: Duration::new(0, 0),
     };
 
     State {

@@ -136,6 +136,24 @@ fn apply(
         state.actions.window_open = false;
         window_manager::open(window);
     }
+
+    // Window Minimize has been requested
+    if state.actions.window_minimize {
+        state.actions.window_minimize = false;
+        window_manager::minimize(window);
+    }
+
+    // Window Maximize has been requested
+    if state.actions.window_maximize {
+        state.actions.window_maximize = false;
+        window_manager::maximize(window);
+    }
+
+    // Window Un-Maximize has been requested
+    if state.actions.window_unmaximize {
+        state.actions.window_unmaximize = false;
+        window_manager::unmaximize(window);
+    }
 }
 
 ///

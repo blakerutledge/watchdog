@@ -90,6 +90,21 @@ pub fn close(window: &Window) {
     window.set_visible(false);
 }
 
+// Minimize the window
+pub fn minimize(window: &Window) {
+    window.set_minimized(true);
+}
+
+// Maximize the window
+pub fn maximize(window: &Window) {
+    window.set_maximized(true);
+}
+
+// Un-Maximize the window
+pub fn unmaximize(window: &Window) {
+    window.set_maximized(false);
+}
+
 // Open the window
 pub fn open(window: &Window) {
     window.set_visible(true);

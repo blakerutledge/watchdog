@@ -1,7 +1,11 @@
+use std::time::Duration;
+
 use egui::Vec2;
 
 use super::config::Config;
 use super::state::State;
+
+use super::utils;
 
 pub fn init() -> Box<dyn FnMut(&egui::Context, &mut State, &Config, &winit::window::Window)> {
     // all images embedded in binary
@@ -13,6 +17,7 @@ pub fn init() -> Box<dyn FnMut(&egui::Context, &mut State, &Config, &winit::wind
     let logo = include_bytes!("../../assets/icons/watchdog-logo.png");
     let icon_min = include_bytes!("../../assets/icons/icon-min.png");
     let icon_max = include_bytes!("../../assets/icons/icon-max.png");
+    let icon_unmax = include_bytes!("../../assets/icons/icon-unmax.png");
     let icon_close = include_bytes!("../../assets/icons/icon-close.png");
 
     let font_monolisa = include_bytes!("../../assets/fonts/monolisa/MonoLisa.otf");
@@ -59,6 +64,11 @@ pub fn init() -> Box<dyn FnMut(&egui::Context, &mut State, &Config, &winit::wind
                     println!("created icon_max texture");
                 }
 
+                if !state.ui.textures.contains_key("icon_unmax") {
+                    create_tex(icon_unmax, "icon_unmax", context, state);
+                    println!("created icon_unmax texture");
+                }
+
                 if !state.ui.textures.contains_key("icon_close") {
                     create_tex(icon_close, "icon_close", context, state);
                     println!("created icon_close texture");
@@ -68,7 +78,7 @@ pub fn init() -> Box<dyn FnMut(&egui::Context, &mut State, &Config, &winit::wind
                 */
 
                 // load fonts
-                if (!state.ui.custom_fonts) {
+                if !state.ui.custom_fonts {
                     // init font
                     let mut fonts = egui::FontDefinitions::default();
 
@@ -181,10 +191,12 @@ pub fn init() -> Box<dyn FnMut(&egui::Context, &mut State, &Config, &winit::wind
 
                         let icon_min = state.ui.textures.get("icon_min").unwrap();
                         let icon_max = state.ui.textures.get("icon_max").unwrap();
+                        let icon_unmax = state.ui.textures.get("icon_unmax").unwrap();
                         let icon_close = state.ui.textures.get("icon_close").unwrap();
 
                         let icon_w2 = Vec2::new(48.0, 40.0);
 
+                        // Titlebar
                         let group = ui.group(|ui| {
                             ui.add_space(12.0);
                             ui.image(&logo.1, logo_size);
@@ -194,35 +206,127 @@ pub fn init() -> Box<dyn FnMut(&egui::Context, &mut State, &Config, &winit::wind
                                     .text_style(egui::TextStyle::Name("Title".into()))
                                     .color(egui::Color32::from_rgb(238, 238, 238)),
                             );
-                            ui.add_space(ui.available_width() - icon_w2.x * 2.0);
+                            ui.add_space(ui.available_width() - icon_w2.x * 3.0);
                         });
 
-                        let r = group.response.interact(egui::Sense::drag());
+                        // Title bar draggable to move window
+                        let r = ui.interact(
+                            group.response.rect,
+                            egui::Id::new("title_bar"),
+                            egui::Sense::click_and_drag(),
+                        );
                         if r.drag_started() {
                             window.drag_window().unwrap();
                         }
 
-                        ui.add(egui::ImageButton::new(&icon_min.1, icon_w2));
+                        // Title bar double clickable to max/unmax
+                        // NOTE: something is currently not working with egui doubleclick event dispatch,
+                        // i can double click once and it responds but then never aganin
+                        if r.clicked() {
+                            let n = utils::now();
+                            let diff = n.checked_sub(state.ui.title_bar_time_last_click);
+                            match diff {
+                                Some(diff) => {
+                                    if diff.as_millis() < 500 {
+                                        state.ui.title_bar_time_last_click = Duration::new(0, 0);
 
-                        // ui.add(egui::ImageButton::new(&icon_max.1, icon_w2));
+                                        if window.is_maximized() {
+                                            state.actions.window_unmaximize = true;
+                                        } else {
+                                            state.actions.window_maximize = true;
+                                        }
+                                    } else {
+                                        state.ui.title_bar_time_last_click = n;
+                                    }
+                                }
+                                _ => {
+                                    state.ui.title_bar_time_last_click = n;
+                                }
+                            };
+                        }
 
+                        // Window Minimize
+                        let r = ui.add(egui::ImageButton::new(&icon_min.1, icon_w2));
+                        if r.clicked() {
+                            state.actions.window_minimize = true;
+                        }
+
+                        // Window Maximize
+                        let r = ui.add(egui::ImageButton::new(
+                            if window.is_maximized() {
+                                &icon_unmax.1
+                            } else {
+                                &icon_max.1
+                            },
+                            icon_w2,
+                        ));
+                        if r.clicked() {
+                            if window.is_maximized() {
+                                state.actions.window_unmaximize = true;
+                            } else {
+                                state.actions.window_maximize = true;
+                            }
+                        }
+
+                        // Set background of image button to red
                         let theme = ui.visuals_mut();
                         theme.widgets.hovered.weak_bg_fill = egui::Color32::from_rgb(251, 81, 48);
                         theme.widgets.active.weak_bg_fill = egui::Color32::from_rgb(238, 58, 23);
 
-                        ui.add(egui::ImageButton::new(&icon_close.1, icon_w2));
+                        // Window Close
+                        let r = ui.add(egui::ImageButton::new(&icon_close.1, icon_w2));
+                        if r.clicked() {
+                            state.actions.window_close = true;
+                        }
                     });
+                });
+
+            let mut exit_tooltip_clickout = false;
+
+            egui::Area::new("Exit")
+                .order(egui::Order::Foreground)
+                // .resizable(false)
+                .movable(false)
+                // .collapsible(false)
+                // .title_bar(true)
+                .pivot(egui::Align2::LEFT_BOTTOM)
+                .default_pos(egui::Pos2::new(50.0, 700.0))
+                .show(context, |ui| {
+                    if state.ui.show_exit_tooltip {
+                        let group = ui.group(|ui| {
+                            let r = ui.button("Close Watchdog");
+                            if r.clicked() {
+                                state.actions.window_close = true;
+                                state.ui.show_exit_tooltip = false;
+                            }
+                            let r = ui.button("Quit Watchdog");
+                            if r.clicked() {
+                                state.actions.app_exit = true;
+                                state.ui.show_exit_tooltip = false;
+                            }
+                            let r = ui.button("Quit Watchdog and Quit Watched Apps");
+                            if r.clicked() {
+                                // state.actions.app_exit = true;
+                                state.ui.show_exit_tooltip = false;
+                            }
+                        });
+
+                        if (group.response.clicked_elsewhere()) {
+                            println!("clicked elsewhere");
+                            exit_tooltip_clickout = true;
+                            state.ui.show_exit_tooltip = false;
+                        }
+                    }
                 });
 
             egui::SidePanel::left("nav_bar")
                 .exact_width(64.0)
-                .frame(
-                    egui::Frame::none().fill(egui::Color32::from_rgb(40, 40, 40)), // .inner_margin(10.0),
-                )
+                .frame(egui::Frame::none().fill(egui::Color32::from_rgb(40, 40, 40)))
                 .resizable(false)
                 .show_separator_line(false)
                 .show(context, |ui| {
                     ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
+                        // Get Icon TextureHandles
                         let icon_config = state.ui.textures.get("icon_config").unwrap();
                         let icon_play = state.ui.textures.get("icon_play").unwrap();
                         let icon_stats = state.ui.textures.get("icon_stats").unwrap();
@@ -275,106 +379,120 @@ pub fn init() -> Box<dyn FnMut(&egui::Context, &mut State, &Config, &winit::wind
                         };
                         style.spacing.item_spacing = egui::Vec2::new(0.0, 10.0);
 
-                        ui.add(egui::ImageButton::new(&icon_config.1, icon_w2))
-                            .on_hover_cursor(egui::CursorIcon::PointingHand);
-                        ui.add(egui::ImageButton::new(&icon_play.1, icon_w2))
-                            .on_hover_cursor(egui::CursorIcon::PointingHand);
-                        ui.add(egui::ImageButton::new(&icon_stats.1, icon_w2))
-                            .on_hover_cursor(egui::CursorIcon::PointingHand);
+                        // Config
+                        let r = ui.add(egui::ImageButton::new(&icon_config.1, icon_w2));
+                        if r.clicked() {
+                            state.ui.active_tab = super::state::TabState::Config;
+                        }
+                        r.on_hover_cursor(egui::CursorIcon::PointingHand);
+
+                        // Play
+                        let r = ui.add(egui::ImageButton::new(&icon_play.1, icon_w2));
+                        if r.clicked() {
+                            state.ui.active_tab = super::state::TabState::Play;
+                        }
+                        r.on_hover_cursor(egui::CursorIcon::PointingHand);
+
+                        // Stats
+                        let r = ui.add(egui::ImageButton::new(&icon_stats.1, icon_w2));
+                        if r.clicked() {
+                            state.ui.active_tab = super::state::TabState::Stats;
+                        }
+                        r.on_hover_cursor(egui::CursorIcon::PointingHand);
+
+                        // Float to bottom
                         ui.add_space(ui.available_height() - icon_w - 10.0);
-                        ui.add(egui::ImageButton::new(&icon_exit.1, icon_w2))
-                            .on_hover_cursor(egui::CursorIcon::PointingHand);
+
+                        // Exit
+                        let r = ui.add(egui::ImageButton::new(&icon_exit.1, icon_w2));
+                        if r.clicked() {
+                            if !exit_tooltip_clickout && !state.ui.show_exit_tooltip {
+                                state.ui.show_exit_tooltip = true;
+                            }
+                        }
+                        r.on_hover_cursor(egui::CursorIcon::PointingHand);
                     })
                 });
 
-            egui::CentralPanel::default().show(context, |ui| {
-                //
-                // host perf
-                //
-                ui.add_space(6.0);
-                ui.strong("Host Performance");
-                ui.label(format!("FPS: {}", state.perf.fps));
+            egui::Window::new("Host Performance")
+                .resizable(false)
+                .movable(true)
+                .collapsible(false)
+                .title_bar(true)
+                .pivot(egui::Align2::RIGHT_BOTTOM)
+                .default_pos(egui::Pos2::new(99999.0, 9999999.0))
+                .show(context, |ui| {
+                    //
+                    // host perf
+                    //
+                    ui.add_space(6.0);
+                    // ui.strong("Host Performance");
+                    ui.label(format!("FPS: {}", state.perf.fps));
 
-                // If there is only one frame in the list, it is partially completed,
-                // and does not yet have a frame.stop time that we can use. The first frame is
-                // currently being rendered!
-                let mut frametime = format_ms(0.0);
-                if state.perf.frames.len() >= 2 {
-                    // Render the previous frame's stats, this frame
-                    let f = &state.perf.frames[state.perf.frames.len() - 2];
-                    let diff = f.stop.checked_sub(f.start);
-                    match diff {
-                        Some(diff) => {
-                            frametime = format_ms(diff.as_nanos() as f32 / 1e6);
-                        }
-                        _ => {}
-                    }
-                }
-                ui.label(format!("Frame Time: {} ms", frametime));
-
-                ui.label(format!(
-                    "Avg Frame Time: {}ms",
-                    format_ms(state.perf.avg_frame_time)
-                ));
-
-                //
-                // config
-                //
-                ui.add_space(6.0);
-                ui.strong("Json");
-
-                if ui.button("Open file…").clicked() {
-                    if let Some(path) = rfd::FileDialog::new().pick_file() {
-                        state.json.filepath = Some(path.display().to_string());
-                    }
-                }
-
-                if let Some(picked_path) = &state.json.filepath {
-                    ui.horizontal(|ui| {
-                        ui.label("Picked file:");
-                        ui.monospace(picked_path);
-                    });
-                }
-
-                /*
-                    // Show dropped files (if any):
-                    if !self.dropped_files.is_empty() {
-                        ui.group(|ui| {
-                            ui.label("Dropped files:");
-
-                            for file in &self.dropped_files {
-                                let mut info = if let Some(path) = &file.path {
-                                    path.display().to_string()
-                                } else if !file.name.is_empty() {
-                                    file.name.clone()
-                                } else {
-                                    "???".to_owned()
-                                };
-                                if let Some(bytes) = &file.bytes {
-                                    use std::fmt::Write as _;
-                                    write!(info, " ({} bytes)", bytes.len()).ok();
-                                }
-                                ui.label(info);
+                    // If there is only one frame in the list, it is partially completed,
+                    // and does not yet have a frame.stop time that we can use. The first frame is
+                    // currently being rendered!
+                    let mut frametime = format_ms(0.0);
+                    if state.perf.frames.len() >= 2 {
+                        // Render the previous frame's stats, this frame
+                        let f = &state.perf.frames[state.perf.frames.len() - 2];
+                        let diff = f.stop.checked_sub(f.start);
+                        match diff {
+                            Some(diff) => {
+                                frametime = format_ms(diff.as_nanos() as f32 / 1e6);
                             }
-                        });
+                            _ => {}
+                        }
                     }
+                    ui.label(format!("Frame Time: {} ms", frametime));
+
+                    ui.label(format!(
+                        "Avg Frame Time: {}ms",
+                        format_ms(state.perf.avg_frame_time)
+                    ));
                 });
 
-                */
+            egui::CentralPanel::default().show(context, |ui| {
+                match state.ui.active_tab {
+                    super::state::TabState::Config => {
+                        ui.label("Config");
 
-                ui.checkbox(&mut state.json.parsed, "Parsed");
+                        //
+                        // config
+                        //
+                        ui.add_space(6.0);
+                        ui.strong("Json");
 
-                if ui.button("Quit Watchdog").clicked() {
-                    state.actions.app_exit = true
+                        if ui.button("Open file…").clicked() {
+                            if let Some(path) = rfd::FileDialog::new().pick_file() {
+                                state.json.filepath = Some(path.display().to_string());
+                            }
+                        }
+
+                        if let Some(picked_path) = &state.json.filepath {
+                            ui.horizontal(|ui| {
+                                ui.label("Picked file:");
+                                ui.monospace(picked_path);
+                            });
+                        }
+
+                        ui.checkbox(&mut state.json.parsed, "Parsed");
+                    }
+                    super::state::TabState::Play => {
+                        ui.label("Play");
+                    }
+                    super::state::TabState::Stats => {
+                        ui.label("Stats");
+                    }
                 }
 
-                if ui.button("Abort Watched Task").clicked() {
-                    state.actions.app_exit = true
-                }
+                // if ui.button("Abort Watched Task").clicked() {
+                //     state.actions.app_exit = true
+                // }
 
-                if ui.button("Quit Watchdog and Abort Watched Task").clicked() {
-                    state.actions.app_exit = true
-                }
+                // if ui.button("Quit Watchdog and Abort Watched Task").clicked() {
+                //     state.actions.app_exit = true
+                // }
             });
         },
     )
@@ -383,8 +501,6 @@ pub fn init() -> Box<dyn FnMut(&egui::Context, &mut State, &Config, &winit::wind
 fn format_ms(f: f32) -> String {
     format!("{:06.3}", f)
 }
-
-fn draw_header(ui: &mut egui::Ui, state: &mut State, config: &Config) {}
 
 fn create_tex(image_data: &[u8], slug: &str, context: &egui::Context, state: &mut State) {
     let image = image::load_from_memory(image_data)
