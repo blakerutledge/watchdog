@@ -2,6 +2,7 @@ use super::perf::Frame;
 use std::collections::HashMap;
 use std::collections::VecDeque;
 use std::time::Duration;
+use winit::window::{CursorIcon, ResizeDirection};
 
 //
 // Define all state object properties, nested into categories
@@ -47,6 +48,8 @@ pub struct UiState {
     pub show_exit_tooltip: bool,
     pub overlay_exit: bool,
     pub title_bar_time_last_click: Duration,
+    pub cursor_location: Option<ResizeDirection>,
+    pub cursor_icon: CursorIcon,
 }
 
 pub struct Json {
@@ -102,6 +105,8 @@ pub fn init() -> State {
         show_exit_tooltip: false,
         overlay_exit: false,
         title_bar_time_last_click: Duration::new(0, 0),
+        cursor_location: None,
+        cursor_icon: CursorIcon::Default,
     };
 
     State {
