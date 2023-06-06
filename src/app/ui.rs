@@ -216,6 +216,7 @@ pub fn init() -> Box<dyn FnMut(&egui::Context, &mut State, &Config, &winit::wind
                             egui::Sense::click_and_drag(),
                         );
                         if r.drag_started() {
+                            // TO DO, have 8px unselectable resize area at the top
                             window.drag_window().unwrap();
                         }
 

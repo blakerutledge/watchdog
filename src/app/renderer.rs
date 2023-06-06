@@ -60,7 +60,7 @@ pub fn init(window: &winit::window::Window) -> Renderer {
         format: surface_format,
         width: size.width as u32,
         height: size.height as u32,
-        present_mode: wgpu::PresentMode::Fifo,
+        present_mode: wgpu::PresentMode::Immediate,
         alpha_mode: surface_caps.alpha_modes[0],
         view_formats: vec![],
     };
@@ -88,15 +88,51 @@ pub fn init(window: &winit::window::Window) -> Renderer {
         queue,
     }
 }
+/// A custom event type for the winit app.
+pub enum Event {
+    RequestRedraw,
+}
 
-pub fn test_redraw(event: &winit::event::Event<'_, ()>, renderer: &mut Renderer) -> bool {
+/// This is the repaint signal type that egui needs for requesting a repaint from another thread.
+/// It sends the custom RequestRedraw event to the winit event loop.
+struct ExampleRepaintSignal(std::sync::Mutex<winit::event_loop::EventLoopProxy<Event>>);
+
+impl epi::backend::RepaintSignal for ExampleRepaintSignal {
+    fn request_repaint(&self) {
+        self.0.lock().unwrap().send_event(Event::RequestRedraw).ok();
+    }
+}
+
+pub fn test_redraw(
+    event: &winit::event::Event<'_, ()>,
+    renderer: &mut Renderer,
+    window: &winit::window::Window,
+) -> bool {
     let mut ready = false;
 
     renderer.platform.handle_event(&event);
     match event {
+        // Fix this to use threads .. maybe?
+        winit::event::Event::MainEventsCleared => {
+            // winit::event::Event::MainEventsCleared => {
+            window.request_redraw();
+        }
+
+        winit::event::Event::UserEvent(e) => {
+            // match e {
+            // Event::RequestRedraw => {
+            // window.request_redraw();
+            // }
+            // _ => {}
+            // }
+            // Event::RequestRedraw => {
+        }
+
         winit::event::Event::RedrawRequested(..) => {
             ready = true;
+            // println!("redraw");
         }
+
         _ => {}
     }
 
@@ -216,11 +252,6 @@ pub fn update(
     renderer.platform.handle_event(&event);
 
     match event {
-        // Fix this to use threads
-        // MainEventsCleared | UserEvent(Event::RequestRedraw) => {
-        winit::event::Event::MainEventsCleared => {
-            window.request_redraw();
-        }
         winit::event::Event::WindowEvent { event, .. } => match event {
             winit::event::WindowEvent::Resized(size) => {
                 // Resize with 0 width and height is used by winit to signal a minimize event on Windows.

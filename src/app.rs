@@ -24,6 +24,7 @@ pub fn init() {
     // let osc = osc_manager::init();
 
     // Create shared event loop for winit + egui + tray-icon events
+    // winit::event_loop::EventLoopBuilder::<Event>::with_user_event().build();
     let event_loop: EventLoop<()> = EventLoopBuilder::with_user_event().build();
 
     // Create winit window
@@ -98,7 +99,7 @@ fn update(
     );
 
     // Only draw as fast as the GPU says we should
-    let redraw = renderer::test_redraw(event, renderer);
+    let redraw = renderer::test_redraw(event, renderer, window);
     if redraw {
         perf::start_frame(state);
 

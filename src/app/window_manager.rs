@@ -79,21 +79,92 @@ pub fn update(
 
             winit::event::WindowEvent::CursorMoved { position, .. } => {
                 if !window.is_decorated() {
-                    let new_location =
-                        cursor_resize_direction(window.inner_size(), *position, BORDER);
+                    if state.ui.resizing {
+                        let window_size = window.inner_size();
+                        let window_position = window.outer_position().unwrap();
 
-                    if new_location != state.ui.cursor_location {
-                        state.ui.cursor_location = new_location;
-                        // window.set_cursor_icon(cursor_direction_icon(state.ui.cursor_location))
-                        state.ui.cursor_icon = cursor_direction_icon(state.ui.cursor_location);
+                        match state.ui.cursor_icon {
+                            CursorIcon::EResize => {
+                                window.set_inner_size(winit::dpi::PhysicalSize::new(
+                                    position.x as f64,
+                                    window_size.height as f64,
+                                ));
+                            }
+                            CursorIcon::NResize => {
+                                window.set_outer_position(winit::dpi::PhysicalPosition::new(
+                                    window_position.x,
+                                    window_position.y + position.y as i32,
+                                ));
+                                window.set_inner_size(winit::dpi::PhysicalSize::new(
+                                    window_size.width as f64,
+                                    window_size.height as f64 - position.y,
+                                ));
+                            }
+                            CursorIcon::NeResize => {
+                                window.set_outer_position(winit::dpi::PhysicalPosition::new(
+                                    window_position.x,
+                                    window_position.y + position.y as i32,
+                                ));
+                                window.set_inner_size(winit::dpi::PhysicalSize::new(
+                                    position.x,
+                                    window_size.height as f64 - position.y,
+                                ));
+                            }
+                            CursorIcon::NwResize => {
+                                window.set_outer_position(winit::dpi::PhysicalPosition::new(
+                                    window_position.x + position.x as i32,
+                                    window_position.y + position.y as i32,
+                                ));
+                                window.set_inner_size(winit::dpi::PhysicalSize::new(
+                                    window_size.width as f64 - position.x,
+                                    window_size.height as f64 - position.y,
+                                ));
+                            }
+                            CursorIcon::SResize => {
+                                window.set_inner_size(winit::dpi::PhysicalSize::new(
+                                    window_size.width as f32,
+                                    position.y as f32,
+                                ));
+                            }
+                            CursorIcon::SeResize => {
+                                window.set_inner_size(winit::dpi::PhysicalSize::new(
+                                    position.x as f32,
+                                    position.y as f32,
+                                ));
+                            }
+                            CursorIcon::SwResize => {
+                                window.set_outer_position(winit::dpi::PhysicalPosition::new(
+                                    window_position.x + position.x as i32,
+                                    window_position.y,
+                                ));
+                                window.set_inner_size(winit::dpi::PhysicalSize::new(
+                                    window_size.width as f64 - position.x,
+                                    position.y,
+                                ));
+                            }
+                            CursorIcon::WResize => {
+                                window.set_outer_position(winit::dpi::PhysicalPosition::new(
+                                    window_position.x + position.x as i32,
+                                    window_position.y,
+                                ));
+                                window.set_inner_size(winit::dpi::PhysicalSize::new(
+                                    window_size.width as f64 - position.x,
+                                    window_size.height as f64,
+                                ));
+                            }
+                            _ => {}
+                        }
 
-                        println!("cursor is now {:?}", state.ui.cursor_icon);
-                        println!("mouse is now {:?}", position);
-                        println!(
-                            "window is now {:?} & {:?}",
-                            window.outer_position(),
-                            window.inner_size()
-                        );
+                        window.request_redraw();
+                    } else {
+                        let new_location =
+                            cursor_resize_direction(window.inner_size(), *position, BORDER);
+
+                        if new_location != state.ui.cursor_location {
+                            state.ui.cursor_location = new_location;
+                            // window.set_cursor_icon(cursor_direction_icon(state.ui.cursor_location))
+                            state.ui.cursor_icon = cursor_direction_icon(state.ui.cursor_location);
+                        }
                     }
                 }
             }
@@ -106,6 +177,18 @@ pub fn update(
                 if let Some(dir) = state.ui.cursor_location {
                     // let _res = window.drag_resize_window(dir);
                     println!("start drag");
+                    state.ui.resizing = true;
+                }
+            }
+
+            winit::event::WindowEvent::MouseInput {
+                state: winit::event::ElementState::Released,
+                button: winit::event::MouseButton::Left,
+                ..
+            } => {
+                if state.ui.resizing {
+                    println!("stop drag");
+                    state.ui.resizing = false;
                 }
             }
 
