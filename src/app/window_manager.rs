@@ -98,39 +98,100 @@ pub fn update(
 
                             // TO DO: finish manually enforcing min & max window size limits
                             ResizeDirection::North => {
-                                window.set_outer_position(winit::dpi::PhysicalPosition::new(
-                                    window_position.x,
-                                    window_position.y + position.y as i32,
-                                ));
+                                // clamp
+                                let (h, y) = if window_size.height as f64 - position.y
+                                    < MIN_HEIGHT as f64 * window.scale_factor()
+                                {
+                                    let diff = window_size.height
+                                        - (MIN_HEIGHT as f64 * window.scale_factor()) as u32;
+                                    (
+                                        MIN_HEIGHT as f64 * window.scale_factor(),
+                                        window_position.y + diff as i32,
+                                    )
+                                } else {
+                                    (
+                                        window_size.height as f64 - position.y,
+                                        window_position.y + position.y as i32,
+                                    )
+                                };
                                 window.set_inner_size(winit::dpi::PhysicalSize::new(
                                     window_size.width as f64,
-                                    window_size.height as f64 - position.y,
+                                    h,
+                                ));
+                                window.set_outer_position(winit::dpi::PhysicalPosition::new(
+                                    window_position.x,
+                                    y,
                                 ));
                             }
                             ResizeDirection::NorthEast => {
+                                let (h, y) = if window_size.height as f64 - position.y
+                                    < MIN_HEIGHT as f64 * window.scale_factor()
+                                {
+                                    let diff = window_size.height
+                                        - (MIN_HEIGHT as f64 * window.scale_factor()) as u32;
+                                    (
+                                        MIN_HEIGHT as f64 * window.scale_factor(),
+                                        window_position.y + diff as i32,
+                                    )
+                                } else {
+                                    (
+                                        window_size.height as f64 - position.y,
+                                        window_position.y + position.y as i32,
+                                    )
+                                };
+                                window.set_inner_size(winit::dpi::PhysicalSize::new(
+                                    f64::max(
+                                        position.x as f64,
+                                        MIN_WIDTH as f64 * window.scale_factor(),
+                                    ),
+                                    h,
+                                ));
                                 window.set_outer_position(winit::dpi::PhysicalPosition::new(
                                     window_position.x,
-                                    window_position.y + position.y as i32,
-                                ));
-                                window.set_inner_size(winit::dpi::PhysicalSize::new(
-                                    position.x,
-                                    window_size.height as f64 - position.y,
+                                    y,
                                 ));
                             }
                             ResizeDirection::NorthWest => {
-                                window.set_outer_position(winit::dpi::PhysicalPosition::new(
-                                    window_position.x + position.x as i32,
-                                    window_position.y + position.y as i32,
-                                ));
-                                window.set_inner_size(winit::dpi::PhysicalSize::new(
-                                    window_size.width as f64 - position.x,
-                                    window_size.height as f64 - position.y,
-                                ));
+                                let (w, x) = if window_size.width as f64 - position.x
+                                    < MIN_WIDTH as f64 * window.scale_factor()
+                                {
+                                    let diff = window_size.width
+                                        - (MIN_WIDTH as f64 * window.scale_factor()) as u32;
+                                    (
+                                        MIN_WIDTH as f64 * window.scale_factor(),
+                                        window_position.x + diff as i32,
+                                    )
+                                } else {
+                                    (
+                                        window_size.width as f64 - position.x,
+                                        window_position.x + position.x as i32,
+                                    )
+                                };
+                                let (h, y) = if window_size.height as f64 - position.y
+                                    < MIN_HEIGHT as f64 * window.scale_factor()
+                                {
+                                    let diff = window_size.height
+                                        - (MIN_HEIGHT as f64 * window.scale_factor()) as u32;
+                                    (
+                                        MIN_HEIGHT as f64 * window.scale_factor(),
+                                        window_position.y + diff as i32,
+                                    )
+                                } else {
+                                    (
+                                        window_size.height as f64 - position.y,
+                                        window_position.y + position.y as i32,
+                                    )
+                                };
+                                window.set_inner_size(winit::dpi::PhysicalSize::new(w, h));
+                                window.set_outer_position(winit::dpi::PhysicalPosition::new(x, y));
                             }
                             ResizeDirection::South => {
                                 window.set_inner_size(winit::dpi::PhysicalSize::new(
                                     window_size.width as f64,
-                                    position.y as f64,
+                                    f64::max(
+                                        position.y as f64,
+                                        MIN_HEIGHT as f64 * window.scale_factor(),
+                                    ),
                                 ));
                             }
                             ResizeDirection::SouthEast => {
@@ -146,23 +207,56 @@ pub fn update(
                                 ));
                             }
                             ResizeDirection::SouthWest => {
-                                window.set_outer_position(winit::dpi::PhysicalPosition::new(
-                                    window_position.x + position.x as i32,
-                                    window_position.y,
-                                ));
+                                let (w, x) = if window_size.width as f64 - position.x
+                                    < MIN_WIDTH as f64 * window.scale_factor()
+                                {
+                                    let diff = window_size.width
+                                        - (MIN_WIDTH as f64 * window.scale_factor()) as u32;
+                                    (
+                                        MIN_WIDTH as f64 * window.scale_factor(),
+                                        window_position.x + diff as i32,
+                                    )
+                                } else {
+                                    (
+                                        window_size.width as f64 - position.x,
+                                        window_position.x + position.x as i32,
+                                    )
+                                };
                                 window.set_inner_size(winit::dpi::PhysicalSize::new(
-                                    window_size.width as f64 - position.x,
-                                    position.y,
+                                    w,
+                                    f64::max(
+                                        position.y as f64,
+                                        MIN_HEIGHT as f64 * window.scale_factor(),
+                                    ),
+                                ));
+                                window.set_outer_position(winit::dpi::PhysicalPosition::new(
+                                    x,
+                                    window_position.y,
                                 ));
                             }
                             ResizeDirection::West => {
-                                window.set_outer_position(winit::dpi::PhysicalPosition::new(
-                                    window_position.x + position.x as i32,
-                                    window_position.y,
-                                ));
+                                let (w, x) = if window_size.width as f64 - position.x
+                                    < MIN_WIDTH as f64 * window.scale_factor()
+                                {
+                                    let diff = window_size.width
+                                        - (MIN_WIDTH as f64 * window.scale_factor()) as u32;
+                                    (
+                                        MIN_WIDTH as f64 * window.scale_factor(),
+                                        window_position.x + diff as i32,
+                                    )
+                                } else {
+                                    (
+                                        window_size.width as f64 - position.x,
+                                        window_position.x + position.x as i32,
+                                    )
+                                };
                                 window.set_inner_size(winit::dpi::PhysicalSize::new(
-                                    window_size.width as f64 - position.x,
+                                    w,
                                     window_size.height as f64,
+                                ));
+                                window.set_outer_position(winit::dpi::PhysicalPosition::new(
+                                    x,
+                                    window_position.y,
                                 ));
                             }
                             _ => {}

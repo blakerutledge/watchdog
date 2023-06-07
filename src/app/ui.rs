@@ -128,121 +128,9 @@ pub fn init() -> Box<dyn FnMut(&egui::Context, &mut State, &Config, &winit::wind
                 }
             }
 
-            // transparent exterior to visible window, for easier drag to resize hit area
-            let border_color = egui::Color32::from_rgba_unmultiplied(0, 0, 0, 20);
-            let border_thick = 3.0;
-
-            // visual line around visible window
-            let stroke_color = egui::Color32::from_rgb(40, 40, 40);
-            let stroke_thick = 2.0;
-
-            egui::TopBottomPanel::top("resize_border_top")
-                .show_separator_line(false)
-                .frame(egui::Frame::none())
-                .exact_height(border_thick)
-                .show(context, |ui| {
-                    let (rect, resp) = ui.allocate_exact_size(
-                        egui::Vec2::new(ui.available_width(), border_thick),
-                        egui::Sense::click_and_drag(),
-                    );
-                    resp.on_hover_and_drag_cursor(state.ui.cursor_icon);
-                    ui.painter_at(rect).rect_filled(rect, 0.0, border_color);
-                });
-
-            egui::TopBottomPanel::bottom("resize_border_bottom")
-                .show_separator_line(false)
-                .frame(egui::Frame::none())
-                .exact_height(border_thick)
-                .show(context, |ui| {
-                    let (rect, resp) = ui.allocate_exact_size(
-                        egui::Vec2::new(ui.available_width(), border_thick),
-                        egui::Sense::click_and_drag(),
-                    );
-                    resp.on_hover_and_drag_cursor(state.ui.cursor_icon);
-                    ui.painter_at(rect).rect_filled(rect, 0.0, border_color);
-                });
-
-            egui::SidePanel::left("resize_border_left")
-                .show_separator_line(false)
-                .frame(egui::Frame::none())
-                .exact_width(border_thick)
-                .resizable(false)
-                .show(context, |ui| {
-                    let (rect, resp) = ui.allocate_exact_size(
-                        egui::Vec2::new(border_thick, ui.available_height()),
-                        egui::Sense::click_and_drag(),
-                    );
-                    resp.on_hover_and_drag_cursor(state.ui.cursor_icon);
-                    ui.painter_at(rect).rect_filled(rect, 0.0, border_color);
-                });
-
-            egui::SidePanel::right("resize_border_right")
-                .show_separator_line(false)
-                .frame(egui::Frame::none())
-                .exact_width(border_thick)
-                .resizable(false)
-                .show(context, |ui| {
-                    let (rect, resp) = ui.allocate_exact_size(
-                        egui::Vec2::new(border_thick, ui.available_height()),
-                        egui::Sense::click_and_drag(),
-                    );
-                    resp.on_hover_and_drag_cursor(state.ui.cursor_icon);
-                    ui.painter_at(rect).rect_filled(rect, 0.0, border_color);
-                });
-
-            egui::TopBottomPanel::top("resize_stroke_top")
-                .show_separator_line(false)
-                .frame(egui::Frame::none())
-                .exact_height(stroke_thick)
-                .show(context, |ui| {
-                    let (rect, resp) = ui.allocate_exact_size(
-                        egui::Vec2::new(ui.available_width(), stroke_thick),
-                        egui::Sense::click_and_drag(),
-                    );
-                    resp.on_hover_and_drag_cursor(state.ui.cursor_icon);
-                    ui.painter_at(rect).rect_filled(rect, 0.0, stroke_color);
-                });
-
-            egui::TopBottomPanel::bottom("resize_stroke_bottom")
-                .show_separator_line(false)
-                .frame(egui::Frame::none())
-                .exact_height(stroke_thick)
-                .show(context, |ui| {
-                    let (rect, resp) = ui.allocate_exact_size(
-                        egui::Vec2::new(ui.available_width(), stroke_thick),
-                        egui::Sense::click_and_drag(),
-                    );
-                    resp.on_hover_and_drag_cursor(state.ui.cursor_icon);
-                    ui.painter_at(rect).rect_filled(rect, 0.0, stroke_color);
-                });
-
-            egui::SidePanel::left("resize_stroke_left")
-                .show_separator_line(false)
-                .frame(egui::Frame::none())
-                .exact_width(stroke_thick)
-                .resizable(false)
-                .show(context, |ui| {
-                    let (rect, resp) = ui.allocate_exact_size(
-                        egui::Vec2::new(stroke_thick, ui.available_height()),
-                        egui::Sense::click_and_drag(),
-                    );
-                    resp.on_hover_and_drag_cursor(state.ui.cursor_icon);
-                    ui.painter_at(rect).rect_filled(rect, 0.0, stroke_color);
-                });
-
-            egui::SidePanel::right("resize_stroke_right")
-                .show_separator_line(false)
-                .frame(egui::Frame::none())
-                .exact_width(stroke_thick)
-                .resizable(false)
-                .show(context, |ui| {
-                    let (rect, resp) = ui.allocate_exact_size(
-                        egui::Vec2::new(stroke_thick, ui.available_height()),
-                        egui::Sense::click_and_drag(),
-                    );
-                    resp.on_hover_and_drag_cursor(state.ui.cursor_icon);
-                    ui.painter_at(rect).rect_filled(rect, 0.0, stroke_color);
-                });
+            if (!window.is_maximized()) {
+                draw_resize_borders(context, state);
+            }
 
             egui::TopBottomPanel::top("title_bar")
                 .exact_height(40.0)
@@ -635,4 +523,122 @@ fn create_tex(image_data: &[u8], slug: &str, context: &egui::Context, state: &mu
     let tex = context.load_texture(slug, i, Default::default());
 
     state.ui.textures.insert(slug.to_string(), (raw_size, tex));
+}
+
+fn draw_resize_borders(context: &egui::Context, state: &mut super::state::State) {
+    // transparent exterior to visible window, for easier drag to resize hit area
+    let border_color = egui::Color32::from_rgba_unmultiplied(0, 0, 0, 20);
+    let border_thick = 3.0;
+
+    // visual line around visible window
+    let stroke_color = egui::Color32::from_rgb(40, 40, 40);
+    let stroke_thick = 2.0;
+
+    egui::TopBottomPanel::top("resize_border_top")
+        .show_separator_line(false)
+        .frame(egui::Frame::none())
+        .exact_height(border_thick)
+        .show(context, |ui| {
+            let (rect, resp) = ui.allocate_exact_size(
+                egui::Vec2::new(ui.available_width(), border_thick),
+                egui::Sense::click_and_drag(),
+            );
+            resp.on_hover_and_drag_cursor(state.ui.cursor_icon);
+            ui.painter_at(rect).rect_filled(rect, 0.0, border_color);
+        });
+
+    egui::TopBottomPanel::bottom("resize_border_bottom")
+        .show_separator_line(false)
+        .frame(egui::Frame::none())
+        .exact_height(border_thick)
+        .show(context, |ui| {
+            let (rect, resp) = ui.allocate_exact_size(
+                egui::Vec2::new(ui.available_width(), border_thick),
+                egui::Sense::click_and_drag(),
+            );
+            resp.on_hover_and_drag_cursor(state.ui.cursor_icon);
+            ui.painter_at(rect).rect_filled(rect, 0.0, border_color);
+        });
+
+    egui::SidePanel::left("resize_border_left")
+        .show_separator_line(false)
+        .frame(egui::Frame::none())
+        .exact_width(border_thick)
+        .resizable(false)
+        .show(context, |ui| {
+            let (rect, resp) = ui.allocate_exact_size(
+                egui::Vec2::new(border_thick, ui.available_height()),
+                egui::Sense::click_and_drag(),
+            );
+            resp.on_hover_and_drag_cursor(state.ui.cursor_icon);
+            ui.painter_at(rect).rect_filled(rect, 0.0, border_color);
+        });
+
+    egui::SidePanel::right("resize_border_right")
+        .show_separator_line(false)
+        .frame(egui::Frame::none())
+        .exact_width(border_thick)
+        .resizable(false)
+        .show(context, |ui| {
+            let (rect, resp) = ui.allocate_exact_size(
+                egui::Vec2::new(border_thick, ui.available_height()),
+                egui::Sense::click_and_drag(),
+            );
+            resp.on_hover_and_drag_cursor(state.ui.cursor_icon);
+            ui.painter_at(rect).rect_filled(rect, 0.0, border_color);
+        });
+
+    egui::TopBottomPanel::top("resize_stroke_top")
+        .show_separator_line(false)
+        .frame(egui::Frame::none())
+        .exact_height(stroke_thick)
+        .show(context, |ui| {
+            let (rect, resp) = ui.allocate_exact_size(
+                egui::Vec2::new(ui.available_width(), stroke_thick),
+                egui::Sense::click_and_drag(),
+            );
+            resp.on_hover_and_drag_cursor(state.ui.cursor_icon);
+            ui.painter_at(rect).rect_filled(rect, 0.0, stroke_color);
+        });
+
+    egui::TopBottomPanel::bottom("resize_stroke_bottom")
+        .show_separator_line(false)
+        .frame(egui::Frame::none())
+        .exact_height(stroke_thick)
+        .show(context, |ui| {
+            let (rect, resp) = ui.allocate_exact_size(
+                egui::Vec2::new(ui.available_width(), stroke_thick),
+                egui::Sense::click_and_drag(),
+            );
+            resp.on_hover_and_drag_cursor(state.ui.cursor_icon);
+            ui.painter_at(rect).rect_filled(rect, 0.0, stroke_color);
+        });
+
+    egui::SidePanel::left("resize_stroke_left")
+        .show_separator_line(false)
+        .frame(egui::Frame::none())
+        .exact_width(stroke_thick)
+        .resizable(false)
+        .show(context, |ui| {
+            let (rect, resp) = ui.allocate_exact_size(
+                egui::Vec2::new(stroke_thick, ui.available_height()),
+                egui::Sense::click_and_drag(),
+            );
+            resp.on_hover_and_drag_cursor(state.ui.cursor_icon);
+            ui.painter_at(rect).rect_filled(rect, 0.0, stroke_color);
+        });
+
+    egui::SidePanel::right("resize_stroke_right")
+        .show_separator_line(false)
+        .frame(egui::Frame::none())
+        .exact_width(stroke_thick)
+        .resizable(false)
+        .show(context, |ui| {
+            let (rect, resp) = ui.allocate_exact_size(
+                egui::Vec2::new(stroke_thick, ui.available_height()),
+                egui::Sense::click_and_drag(),
+            );
+            resp.on_hover_and_drag_cursor(state.ui.cursor_icon);
+            ui.painter_at(rect).rect_filled(rect, 0.0, stroke_color);
+        });
 }
