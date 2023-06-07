@@ -1,6 +1,8 @@
 use winit::event_loop::EventLoop;
 use winit::window::{CursorIcon, ResizeDirection, Window, WindowBuilder};
 
+use std::f64;
+
 use super::state::State;
 
 // Set bounds for window dimensions
@@ -8,7 +10,7 @@ const INITIAL_WIDTH: u32 = 540;
 const INITIAL_HEIGHT: u32 = 800;
 const MIN_WIDTH: u32 = 480;
 const MIN_HEIGHT: u32 = 600;
-const BORDER: f64 = 8.0;
+const BORDER: f64 = 10.0;
 
 pub fn init(event_loop: &EventLoop<()>, state: &mut State) -> Window {
     //
@@ -38,8 +40,8 @@ pub fn init(event_loop: &EventLoop<()>, state: &mut State) -> Window {
         .with_title("Watchdog")
         .with_window_icon(Some(window_icon))
         .with_decorations(false)
+        .with_transparent(true)
         .with_resizable(true)
-        .with_transparent(false)
         .with_inner_size(winit::dpi::LogicalSize {
             width: INITIAL_WIDTH,
             height: INITIAL_HEIGHT,
@@ -83,14 +85,19 @@ pub fn update(
                         let window_size = window.inner_size();
                         let window_position = window.outer_position().unwrap();
 
-                        match state.ui.cursor_icon {
-                            CursorIcon::EResize => {
+                        match state.ui.cursor_location.unwrap() {
+                            ResizeDirection::East => {
                                 window.set_inner_size(winit::dpi::PhysicalSize::new(
-                                    position.x as f64,
+                                    f64::max(
+                                        position.x as f64,
+                                        MIN_WIDTH as f64 * window.scale_factor(),
+                                    ),
                                     window_size.height as f64,
                                 ));
                             }
-                            CursorIcon::NResize => {
+
+                            // TO DO: finish manually enforcing min & max window size limits
+                            ResizeDirection::North => {
                                 window.set_outer_position(winit::dpi::PhysicalPosition::new(
                                     window_position.x,
                                     window_position.y + position.y as i32,
@@ -100,7 +107,7 @@ pub fn update(
                                     window_size.height as f64 - position.y,
                                 ));
                             }
-                            CursorIcon::NeResize => {
+                            ResizeDirection::NorthEast => {
                                 window.set_outer_position(winit::dpi::PhysicalPosition::new(
                                     window_position.x,
                                     window_position.y + position.y as i32,
@@ -110,7 +117,7 @@ pub fn update(
                                     window_size.height as f64 - position.y,
                                 ));
                             }
-                            CursorIcon::NwResize => {
+                            ResizeDirection::NorthWest => {
                                 window.set_outer_position(winit::dpi::PhysicalPosition::new(
                                     window_position.x + position.x as i32,
                                     window_position.y + position.y as i32,
@@ -120,19 +127,25 @@ pub fn update(
                                     window_size.height as f64 - position.y,
                                 ));
                             }
-                            CursorIcon::SResize => {
+                            ResizeDirection::South => {
                                 window.set_inner_size(winit::dpi::PhysicalSize::new(
-                                    window_size.width as f32,
-                                    position.y as f32,
+                                    window_size.width as f64,
+                                    position.y as f64,
                                 ));
                             }
-                            CursorIcon::SeResize => {
+                            ResizeDirection::SouthEast => {
                                 window.set_inner_size(winit::dpi::PhysicalSize::new(
-                                    position.x as f32,
-                                    position.y as f32,
+                                    f64::max(
+                                        position.x as f64,
+                                        MIN_WIDTH as f64 * window.scale_factor(),
+                                    ),
+                                    f64::max(
+                                        position.y as f64,
+                                        MIN_HEIGHT as f64 * window.scale_factor(),
+                                    ),
                                 ));
                             }
-                            CursorIcon::SwResize => {
+                            ResizeDirection::SouthWest => {
                                 window.set_outer_position(winit::dpi::PhysicalPosition::new(
                                     window_position.x + position.x as i32,
                                     window_position.y,
@@ -142,7 +155,7 @@ pub fn update(
                                     position.y,
                                 ));
                             }
-                            CursorIcon::WResize => {
+                            ResizeDirection::West => {
                                 window.set_outer_position(winit::dpi::PhysicalPosition::new(
                                     window_position.x + position.x as i32,
                                     window_position.y,
@@ -157,13 +170,16 @@ pub fn update(
 
                         window.request_redraw();
                     } else {
-                        let new_location =
-                            cursor_resize_direction(window.inner_size(), *position, BORDER);
+                        if true {
+                            let new_location =
+                                cursor_resize_direction(window.inner_size(), *position, BORDER);
 
-                        if new_location != state.ui.cursor_location {
-                            state.ui.cursor_location = new_location;
-                            // window.set_cursor_icon(cursor_direction_icon(state.ui.cursor_location))
-                            state.ui.cursor_icon = cursor_direction_icon(state.ui.cursor_location);
+                            if new_location != state.ui.cursor_location {
+                                state.ui.cursor_location = new_location;
+                                // window.set_cursor_icon(cursor_direction_icon(state.ui.cursor_location))
+                                state.ui.cursor_icon =
+                                    cursor_direction_icon(state.ui.cursor_location);
+                            }
                         }
                     }
                 }
@@ -224,6 +240,7 @@ pub fn unmaximize(window: &Window) {
 // Open the window
 pub fn open(window: &Window) {
     window.set_visible(true);
+    window.set_minimized(false);
     window.focus_window();
 }
 
@@ -232,19 +249,19 @@ pub fn on_exit(window: &Window) {
     window.set_visible(false);
 }
 
-fn cursor_direction_icon(resize_direction: Option<ResizeDirection>) -> CursorIcon {
+fn cursor_direction_icon(resize_direction: Option<ResizeDirection>) -> egui::CursorIcon {
     match resize_direction {
         Some(resize_direction) => match resize_direction {
-            ResizeDirection::East => CursorIcon::EResize,
-            ResizeDirection::North => CursorIcon::NResize,
-            ResizeDirection::NorthEast => CursorIcon::NeResize,
-            ResizeDirection::NorthWest => CursorIcon::NwResize,
-            ResizeDirection::South => CursorIcon::SResize,
-            ResizeDirection::SouthEast => CursorIcon::SeResize,
-            ResizeDirection::SouthWest => CursorIcon::SwResize,
-            ResizeDirection::West => CursorIcon::WResize,
+            ResizeDirection::East => egui::CursorIcon::ResizeHorizontal,
+            ResizeDirection::North => egui::CursorIcon::ResizeVertical,
+            ResizeDirection::NorthEast => egui::CursorIcon::ResizeNeSw,
+            ResizeDirection::NorthWest => egui::CursorIcon::ResizeNwSe,
+            ResizeDirection::South => egui::CursorIcon::ResizeVertical,
+            ResizeDirection::SouthEast => egui::CursorIcon::ResizeNwSe,
+            ResizeDirection::SouthWest => egui::CursorIcon::ResizeNeSw,
+            ResizeDirection::West => egui::CursorIcon::ResizeHorizontal,
         },
-        None => CursorIcon::Default,
+        None => egui::CursorIcon::Default,
     }
 }
 

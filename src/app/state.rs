@@ -2,7 +2,7 @@ use super::perf::Frame;
 use std::collections::HashMap;
 use std::collections::VecDeque;
 use std::time::Duration;
-use winit::window::{CursorIcon, ResizeDirection};
+use winit::window::ResizeDirection;
 
 //
 // Define all state object properties, nested into categories
@@ -49,7 +49,7 @@ pub struct UiState {
     pub overlay_exit: bool,
     pub title_bar_time_last_click: Duration,
     pub cursor_location: Option<ResizeDirection>,
-    pub cursor_icon: CursorIcon,
+    pub cursor_icon: egui::CursorIcon,
     pub resizing: bool,
     pub resize_start_mouse: (u8, u8),
     pub resize_start_corner: (u8, u8),
@@ -109,7 +109,7 @@ pub fn init() -> State {
         overlay_exit: false,
         title_bar_time_last_click: Duration::new(0, 0),
         cursor_location: None,
-        cursor_icon: CursorIcon::Default,
+        cursor_icon: egui::CursorIcon::Default,
         resizing: false,
         resize_start_mouse: (0, 0),
         resize_start_corner: (0, 0),
