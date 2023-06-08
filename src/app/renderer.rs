@@ -118,16 +118,15 @@ pub fn test_redraw(
             window.request_redraw();
         }
 
-        winit::event::Event::UserEvent(e) => {
-            // match e {
-            // Event::RequestRedraw => {
-            // window.request_redraw();
-            // }
-            // _ => {}
-            // }
-            // Event::RequestRedraw => {
-        }
-
+        // winit::event::Event::UserEvent(e) => {
+        // match e {
+        // Event::RequestRedraw => {
+        // window.request_redraw();
+        // }
+        // _ => {}
+        // }
+        // Event::RequestRedraw => {
+        // }
         winit::event::Event::RedrawRequested(..) => {
             ready = true;
             // println!("redraw");
@@ -247,11 +246,7 @@ pub fn render(
 }
 
 // RUNS for all events in winit event loop
-pub fn update(
-    event: &winit::event::Event<'_, ()>,
-    window: &winit::window::Window,
-    renderer: &mut Renderer,
-) {
+pub fn update(event: &winit::event::Event<'_, ()>, renderer: &mut Renderer) {
     // Pass the winit events to the platform integration.
     // let start_time = Instant::now();
     renderer.platform.handle_event(&event);

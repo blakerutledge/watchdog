@@ -1,5 +1,5 @@
 use winit::event_loop::EventLoop;
-use winit::window::{CursorIcon, ResizeDirection, Window, WindowBuilder};
+use winit::window::{ResizeDirection, Window, WindowBuilder};
 
 use std::f64;
 
@@ -259,7 +259,6 @@ pub fn update(
                                     window_position.y,
                                 ));
                             }
-                            _ => {}
                         }
 
                         window.request_redraw();
@@ -279,25 +278,24 @@ pub fn update(
                 }
             }
 
+            // Start drag to resize custom event
             winit::event::WindowEvent::MouseInput {
                 state: winit::event::ElementState::Pressed,
                 button: winit::event::MouseButton::Left,
                 ..
             } => {
-                if let Some(dir) = state.ui.cursor_location {
-                    // let _res = window.drag_resize_window(dir);
-                    println!("start drag");
+                if let Some(_dir) = state.ui.cursor_location {
                     state.ui.resizing = true;
                 }
             }
 
+            // Stop drag to resize custom event
             winit::event::WindowEvent::MouseInput {
                 state: winit::event::ElementState::Released,
                 button: winit::event::MouseButton::Left,
                 ..
             } => {
                 if state.ui.resizing {
-                    println!("stop drag");
                     state.ui.resizing = false;
                 }
             }

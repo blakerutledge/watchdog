@@ -79,7 +79,7 @@ fn update(
     *control_flow = winit::event_loop::ControlFlow::Poll;
 
     // Renderer handles a few various winit events outside of redrawing
-    renderer::update(event, window, renderer);
+    renderer::update(event, renderer);
 
     // Window Manager update step, parse events and affect state
     window_manager::update(event, window, state);

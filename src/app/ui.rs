@@ -128,7 +128,7 @@ pub fn init() -> Box<dyn FnMut(&egui::Context, &mut State, &Config, &winit::wind
                 }
             }
 
-            if (!window.is_maximized()) {
+            if !window.is_maximized() {
                 draw_resize_borders(context, state);
             }
 
@@ -325,7 +325,7 @@ pub fn init() -> Box<dyn FnMut(&egui::Context, &mut State, &Config, &winit::wind
                             }
                         });
 
-                        if (group.response.clicked_elsewhere()) {
+                        if group.response.clicked_elsewhere() {
                             println!("clicked elsewhere");
                             exit_tooltip_clickout = true;
                             state.ui.show_exit_tooltip = false;
