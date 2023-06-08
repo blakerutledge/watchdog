@@ -1,3 +1,4 @@
+use super::config::Store;
 use super::perf::Frame;
 use std::collections::HashMap;
 use std::collections::VecDeque;
@@ -56,10 +57,11 @@ pub struct UiState {
 }
 
 pub struct Json {
+    pub store: Store,
+    pub filepath: std::path::PathBuf,
     pub exists: bool,
     pub parsed: bool,
     pub dirty: bool,
-    pub filepath: Option<String>,
 }
 
 pub enum TabState {
@@ -92,10 +94,12 @@ pub fn init() -> State {
     };
 
     let json = Json {
+        // watchdog_store_ready: false,
+        store: Store::build_empty(),
+        filepath: std::path::PathBuf::new(),
         exists: false,
         parsed: false,
         dirty: false,
-        filepath: None,
     };
 
     let ui = UiState {

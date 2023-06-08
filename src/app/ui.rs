@@ -7,7 +7,7 @@ use super::state::State;
 
 use super::utils;
 
-pub fn init() -> Box<dyn FnMut(&egui::Context, &mut State, &Config, &winit::window::Window)> {
+pub fn init() -> Box<dyn FnMut(&egui::Context, &mut State, &mut Config, &winit::window::Window)> {
     // all images embedded in binary
     let icon_config = include_bytes!("../../assets/icons/icon-config.png");
     let icon_play = include_bytes!("../../assets/icons/icon-play.png");
@@ -25,7 +25,7 @@ pub fn init() -> Box<dyn FnMut(&egui::Context, &mut State, &Config, &winit::wind
     Box::new(
         |context: &egui::Context,
          state: &mut State,
-         config: &Config,
+         config: &mut Config,
          window: &winit::window::Window| {
             {
                 // load any missing images
@@ -422,6 +422,7 @@ pub fn init() -> Box<dyn FnMut(&egui::Context, &mut State, &Config, &winit::wind
                     })
                 });
 
+            /*
             egui::Window::new("Host Performance")
                 .resizable(false)
                 .movable(true)
@@ -459,33 +460,11 @@ pub fn init() -> Box<dyn FnMut(&egui::Context, &mut State, &Config, &winit::wind
                         format_ms(state.perf.avg_frame_time)
                     ));
                 });
+            */
 
             egui::CentralPanel::default().show(context, |ui| {
                 match state.ui.active_tab {
-                    super::state::TabState::Config => {
-                        ui.label("Config");
-
-                        //
-                        // config
-                        //
-                        ui.add_space(6.0);
-                        ui.strong("Json");
-
-                        if ui.button("Open file…").clicked() {
-                            if let Some(path) = rfd::FileDialog::new().pick_file() {
-                                state.json.filepath = Some(path.display().to_string());
-                            }
-                        }
-
-                        if let Some(picked_path) = &state.json.filepath {
-                            ui.horizontal(|ui| {
-                                ui.label("Picked file:");
-                                ui.monospace(picked_path);
-                            });
-                        }
-
-                        ui.checkbox(&mut state.json.parsed, "Parsed");
-                    }
+                    super::state::TabState::Config => draw_config(ui, state, config),
                     super::state::TabState::Play => {
                         ui.label("Play");
                     }
@@ -504,6 +483,53 @@ pub fn init() -> Box<dyn FnMut(&egui::Context, &mut State, &Config, &winit::wind
             });
         },
     )
+}
+
+fn draw_config(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
+    ui.label("Config");
+
+    //
+    // config
+    //
+
+    if ui.button("Save config to:").clicked() {
+        if let Some(path) = rfd::FileDialog::new()
+            .add_filter("json", &["json"])
+            .save_file()
+        {
+            super::config::move_config(path, state, config);
+        }
+    }
+
+    if ui.button("Load config from:").clicked() {
+        if let Some(file) = rfd::FileDialog::new()
+            .add_filter("json", &["json"])
+            .pick_file()
+        {
+            super::config::replace_from_file(file, state, config);
+        }
+    }
+
+    if ui.button("Reset config to defaults:").clicked() {
+        super::config::reset_config(state, config);
+    }
+
+    if ui.button("Reset to default file:").clicked() {
+        super::config::reinit_config(state, config);
+    }
+
+    ui.horizontal(|ui| {
+        ui.label("Config Filepath");
+        let config_filepath_label = state.json.filepath.to_str().unwrap();
+        ui.monospace(config_filepath_label);
+    });
+
+    ui.add_space(20.0);
+
+    let r = ui.text_edit_singleline(&mut config.hello);
+    if r.changed() {
+        config.write(&state.json.filepath);
+    };
 }
 
 fn format_ms(f: f32) -> String {

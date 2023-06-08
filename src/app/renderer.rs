@@ -110,7 +110,6 @@ pub fn test_redraw(
 ) -> bool {
     let mut ready = false;
 
-    renderer.platform.handle_event(&event);
     match event {
         // Fix this to use threads .. maybe?
         winit::event::Event::MainEventsCleared => {
@@ -147,16 +146,15 @@ pub fn render(
         dyn FnMut(
             &egui::Context,
             &mut super::state::State,
-            &super::config::Config,
+            &mut super::config::Config,
             &winit::window::Window,
         ),
     >,
     state: &mut super::state::State,
-    config: &super::config::Config,
+    config: &mut super::config::Config,
 ) {
     // Pass the winit events to the platform integration.
     let start_time = Instant::now();
-    renderer.platform.handle_event(&event);
 
     renderer
         .platform

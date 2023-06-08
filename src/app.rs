@@ -19,7 +19,7 @@ pub fn init() {
     // Create the shared state object
     let mut state = state::init();
 
-    let config = config::init(&mut state);
+    let mut config = config::init(&mut state);
 
     // let osc = osc_manager::init();
 
@@ -52,7 +52,7 @@ pub fn init() {
             &mut tray,
             &mut renderer,
             &mut ui_draw_call,
-            &config,
+            &mut config,
             &mut state,
         )
     });
@@ -69,9 +69,9 @@ fn update(
     tray: &mut tray_icon::TrayIcon,
     renderer: &mut renderer::Renderer,
     ui_draw_call: &mut Box<
-        dyn FnMut(&egui::Context, &mut state::State, &config::Config, &winit::window::Window),
+        dyn FnMut(&egui::Context, &mut state::State, &mut config::Config, &winit::window::Window),
     >,
-    config: &config::Config,
+    config: &mut config::Config,
     state: &mut state::State,
 ) {
     // Set to Poll instead of Wait on Windows so we can actually
