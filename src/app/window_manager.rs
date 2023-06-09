@@ -6,10 +6,10 @@ use std::f64;
 use super::state::State;
 
 // Set bounds for window dimensions
-const INITIAL_WIDTH: u32 = 540;
-const INITIAL_HEIGHT: u32 = 800;
-const MIN_WIDTH: u32 = 480;
-const MIN_HEIGHT: u32 = 600;
+const INITIAL_WIDTH: u32 = 720;
+const INITIAL_HEIGHT: u32 = 960;
+const MIN_WIDTH: u32 = 640;
+const MIN_HEIGHT: u32 = 400;
 const BORDER: f64 = 10.0;
 
 pub fn init(event_loop: &EventLoop<()>, state: &mut State) -> Window {

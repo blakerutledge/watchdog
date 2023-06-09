@@ -32,6 +32,7 @@ pub struct Actions {
     pub window_minimize: bool,
     pub window_maximize: bool,
     pub window_unmaximize: bool,
+    pub config_edited: bool,
 }
 
 pub struct Perf {
@@ -83,6 +84,7 @@ pub fn init() -> State {
         window_minimize: false,
         window_maximize: false,
         window_unmaximize: false,
+        config_edited: false,
     };
 
     let perf = Perf {

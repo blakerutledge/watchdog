@@ -6,11 +6,34 @@ use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4, UdpSocket};
 use std::str::FromStr;
 use std::thread;
 use std::time::Duration;
+/*
+pub struct Port {
+    value: usize,
+    valid: bool,
+}
+
+impl Port {
+    fn new(p: usize) -> Self {
+        let mut me = Port {
+            value: p,
+            valid: false,
+        };
+
+        me.validate();
+
+        me
+    }
+
+    fn validate(&mut self) {
+        self.valid = 1024 <= self.value && self.value <= 9999;
+    }
+}
 
 struct OscInterface {
     host: UdpSocket,
     client: SocketAddrV4,
 }
+*/
 
 pub fn init() {
     // Local Host

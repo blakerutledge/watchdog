@@ -93,18 +93,19 @@ fn update(
         window,
         tray,
         state,
+        config,
         // renderer,
         // tray_menu,
         // ui_draw_call,
     );
 
     // Only draw as fast as the GPU says we should
-    let redraw = renderer::test_redraw(event, renderer, window);
+    let redraw = renderer::test_redraw(event, window);
     if redraw {
         perf::start_frame(state);
 
         // Draw Window UI + affect state (immediate mode)
-        renderer::render(event, window, renderer, ui_draw_call, state, config);
+        renderer::render(window, renderer, ui_draw_call, state, config);
     }
 }
 
@@ -116,6 +117,7 @@ fn apply(
     window: &winit::window::Window,
     tray: &mut tray_icon::TrayIcon,
     state: &mut state::State,
+    config: &mut config::Config,
     // renderer: &mut renderer::Renderer,
     // tray_menu: &HashMap<String, tray_manager::MenuElement>,
     // ui_draw_call: &mut Box<dyn FnMut(&egui::Context, &mut state::State)>,
@@ -154,6 +156,12 @@ fn apply(
     if state.actions.window_unmaximize {
         state.actions.window_unmaximize = false;
         window_manager::unmaximize(window);
+    }
+
+    // Config has been edited
+    if state.actions.config_edited {
+        state.actions.config_edited = false;
+        config.write(&state.json.filepath);
     }
 }
 

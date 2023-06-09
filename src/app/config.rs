@@ -82,8 +82,32 @@ impl Store {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct WatchedApp {
+    pub name: String,
+    pub run: String,
+    pub osc_in_port: String,
+    pub osc_out_port: String,
+    pub heartbeat_channel: String,
+    pub heartbeat_interval: String,
+    pub heartbeat_timeout: String,
+    pub startup_timeout: String,
+    pub restart_delay: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct EmailClient {
+    enabled: bool,
+    address: String,
+    password: String,
+    email_on_startup: Vec<String>,
+    email_on_failure: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
     pub hello: String,
+    pub watched_apps: Vec<WatchedApp>,
+    pub email_client: EmailClient,
     // email: Email,
     // network: Network,
 }
@@ -95,6 +119,24 @@ impl Config {
     fn default() -> Self {
         Self {
             hello: "world".to_string(),
+            watched_apps: vec![WatchedApp {
+                name: "demo".to_string(),
+                run: "demo.exe".to_string(),
+                osc_in_port: "1234".to_string(),
+                osc_out_port: "1235".to_string(),
+                heartbeat_channel: "/heart".to_string(),
+                heartbeat_interval: "1".to_string(),
+                heartbeat_timeout: "5".to_string(),
+                startup_timeout: "30".to_string(),
+                restart_delay: "30".to_string(),
+            }],
+            email_client: EmailClient {
+                enabled: false,
+                address: "example@gmail.com".to_string(),
+                password: "password1234".to_string(),
+                email_on_startup: vec!["blake@blakerutledge.com".to_string()],
+                email_on_failure: vec!["blake@blakerutledge.com".to_string()],
+            },
         }
     }
 
@@ -118,7 +160,7 @@ impl Config {
 
     // Helper to convert to JSON string
     fn to_json(&self) -> String {
-        serde_json::to_string(&self).unwrap()
+        serde_json::to_string_pretty(&self).unwrap()
     }
 
     // Store any changes to the Config instance to the JSON file
@@ -126,12 +168,14 @@ impl Config {
         if self.validate() {
             let data = &self.to_json();
             fs::write(filepath, data).expect("Unable to write Watchdog Config JSON file");
+            println!("Stored default JSON config to disk");
         } else {
             println!("TO DO handle invalid config, did not write to json");
         }
     }
 }
 
+/*
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Email {
     startup_success: Vec<String>,
@@ -145,6 +189,7 @@ pub struct Network {
     client_listen_port: u32,
     client_response_port: u32,
 }
+*/
 
 pub fn init(state: &mut State) -> Config {
     //
@@ -181,11 +226,6 @@ pub fn init(state: &mut State) -> Config {
             c.unwrap()
         }
     };
-
-    // Write it back to disk for good measure
-
-    println!("Stored default JSON config to disk");
-    state.json.parsed = true;
 
     c
 

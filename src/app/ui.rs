@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use std::time::Duration;
 
 use egui::Vec2;
@@ -6,6 +7,12 @@ use super::config::Config;
 use super::state::State;
 
 use super::utils;
+
+const ROW_LABEL_WIDTH: f32 = 200.0;
+const ROW_HEIGHT: f32 = 36.0;
+const ROW_MARGIN: f32 = 6.0;
+
+const SHOW_HOST_DEV: bool = false;
 
 pub fn init() -> Box<dyn FnMut(&egui::Context, &mut State, &mut Config, &winit::window::Window)> {
     // all images embedded in binary
@@ -114,10 +121,18 @@ pub fn init() -> Box<dyn FnMut(&egui::Context, &mut State, &mut Config, &winit::
                             TextStyle::Name("Title".into()),
                             FontId::new(14.0, Monospace),
                         ),
-                        (TextStyle::Heading, FontId::new(10.0, Monospace)),
-                        (TextStyle::Body, FontId::new(10.0, Monospace)),
-                        (TextStyle::Monospace, FontId::new(10.0, Monospace)),
-                        (TextStyle::Button, FontId::new(10.0, Monospace)),
+                        (
+                            TextStyle::Name("Subheading".into()),
+                            FontId::new(16.0, Monospace),
+                        ),
+                        (
+                            TextStyle::Name("TextButton".into()),
+                            FontId::new(14.0, Monospace),
+                        ),
+                        (TextStyle::Heading, FontId::new(20.0, Monospace)),
+                        (TextStyle::Body, FontId::new(12.0, Monospace)),
+                        (TextStyle::Monospace, FontId::new(12.0, Monospace)),
+                        (TextStyle::Button, FontId::new(12.0, Monospace)),
                         (TextStyle::Small, FontId::new(8.0, Monospace)),
                     ]
                     .into();
@@ -134,21 +149,10 @@ pub fn init() -> Box<dyn FnMut(&egui::Context, &mut State, &mut Config, &winit::
 
             egui::TopBottomPanel::top("title_bar")
                 .exact_height(40.0)
-                .frame(
-                    egui::Frame::none().fill(egui::Color32::from_rgb(40, 40, 40)), // .inner_margin(egui::style::Margin {
-                                                                                   //     top: 2.0,
-                                                                                   //     right: 2.0,
-                                                                                   //     left: 2.0,
-                                                                                   //     bottom: 0.0,
-                                                                                   // }),
-                )
+                .frame(egui::Frame::none().fill(egui::Color32::from_rgb(40, 40, 40)))
                 .resizable(false)
                 .show_separator_line(false)
                 .show(context, |ui| {
-                    // ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
-                    //     // ui.add_space(4.0);
-
-                    // ui.group(|ui| {
                     ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
                         let theme = ui.visuals_mut();
 
@@ -422,76 +426,133 @@ pub fn init() -> Box<dyn FnMut(&egui::Context, &mut State, &mut Config, &winit::
                     })
                 });
 
-            /*
-            egui::Window::new("Host Performance")
-                .resizable(false)
-                .movable(true)
-                .collapsible(false)
-                .title_bar(true)
-                .pivot(egui::Align2::RIGHT_BOTTOM)
-                .default_pos(egui::Pos2::new(99999.0, 9999999.0))
+            if SHOW_HOST_DEV {
+                egui::Window::new("Host Performance")
+                    .resizable(false)
+                    .movable(true)
+                    .collapsible(false)
+                    .title_bar(true)
+                    .pivot(egui::Align2::RIGHT_BOTTOM)
+                    .default_pos(egui::Pos2::new(99999.0, 9999999.0))
+                    .show(context, |ui| {
+                        //
+                        // host perf
+                        //
+                        ui.add_space(6.0);
+                        // ui.strong("Host Performance");
+                        ui.label(format!("FPS: {}", state.perf.fps));
+
+                        // If there is only one frame in the list, it is partially completed,
+                        // and does not yet have a frame.stop time that we can use. The first frame is
+                        // currently being rendered!
+                        let mut frametime = format_ms(0.0);
+                        if state.perf.frames.len() >= 2 {
+                            // Render the previous frame's stats, this frame
+                            let f = &state.perf.frames[state.perf.frames.len() - 2];
+                            let diff = f.stop.checked_sub(f.start);
+                            match diff {
+                                Some(diff) => {
+                                    frametime = format_ms(diff.as_nanos() as f32 / 1e6);
+                                }
+                                _ => {}
+                            }
+                        }
+                        ui.label(format!("Frame Time: {} ms", frametime));
+
+                        ui.label(format!(
+                            "Avg Frame Time: {}ms",
+                            format_ms(state.perf.avg_frame_time)
+                        ));
+                    });
+            }
+
+            egui::CentralPanel::default()
+                .frame(
+                    egui::Frame::none()
+                        .fill(egui::Color32::from_rgb(28, 28, 28))
+                        .inner_margin(egui::Margin {
+                            left: 2.0,
+                            top: 2.0,
+                            bottom: 2.0,
+                            right: 2.0,
+                        }),
+                )
                 .show(context, |ui| {
                     //
-                    // host perf
+                    // Global styles for central panel
                     //
-                    ui.add_space(6.0);
-                    // ui.strong("Host Performance");
-                    ui.label(format!("FPS: {}", state.perf.fps));
+                    let style = ui.style_mut();
 
-                    // If there is only one frame in the list, it is partially completed,
-                    // and does not yet have a frame.stop time that we can use. The first frame is
-                    // currently being rendered!
-                    let mut frametime = format_ms(0.0);
-                    if state.perf.frames.len() >= 2 {
-                        // Render the previous frame's stats, this frame
-                        let f = &state.perf.frames[state.perf.frames.len() - 2];
-                        let diff = f.stop.checked_sub(f.start);
-                        match diff {
-                            Some(diff) => {
-                                frametime = format_ms(diff.as_nanos() as f32 / 1e6);
-                            }
-                            _ => {}
-                        }
-                    }
-                    ui.label(format!("Frame Time: {} ms", frametime));
+                    // let body = style.text_styles.get_mut(&egui::TextStyle::Body).unwrap();
+                    // body.size = 12.0;
 
-                    ui.label(format!(
-                        "Avg Frame Time: {}ms",
-                        format_ms(state.perf.avg_frame_time)
-                    ));
+                    // let heading = style
+                    //     .text_styles
+                    //     .get_mut(&egui::TextStyle::Heading)
+                    //     .unwrap();
+                    // heading.size = 20.0;
+
+                    // let subhead = style.text_styles
+
+                    style.spacing.button_padding = egui::Vec2::new(10.0, 10.0);
+
+                    style.spacing.scroll_bar_width = 7.0;
+                    // style.spacing.scroll_handle_min_length = 100.0;
+                    style.spacing.scroll_bar_inner_margin = 2.0;
+                    style.spacing.scroll_bar_outer_margin = 0.0;
+
+                    let visuals = ui.visuals_mut();
+                    visuals.extreme_bg_color = egui::Color32::from_rgb(22, 22, 22);
+                    visuals.selection.bg_fill =
+                        egui::Color32::from_rgba_unmultiplied(255, 255, 255, 20);
+
+                    visuals.selection.stroke = egui::Stroke {
+                        width: 1.0,
+                        color: egui::Color32::from_rgba_unmultiplied(234, 162, 0, 255),
+                    };
+
+                    // Draw only the panel for the active tab, allowing for vertical overflow
+                    egui::ScrollArea::vertical()
+                        .always_show_scroll(true)
+                        .show(ui, |ui| {
+                            egui::Frame::none()
+                                .outer_margin(egui::Margin {
+                                    left: 20.0,
+                                    top: 28.0,
+                                    bottom: 20.0,
+                                    right: 20.0,
+                                })
+                                .show(ui, |ui| match state.ui.active_tab {
+                                    super::state::TabState::Config => {
+                                        draw_config(ui, state, config)
+                                    }
+                                    super::state::TabState::Play => draw_play(ui, state, config),
+                                    super::state::TabState::Stats => draw_stats(ui, state, config),
+                                });
+                        });
                 });
-            */
-
-            egui::CentralPanel::default().show(context, |ui| {
-                match state.ui.active_tab {
-                    super::state::TabState::Config => draw_config(ui, state, config),
-                    super::state::TabState::Play => {
-                        ui.label("Play");
-                    }
-                    super::state::TabState::Stats => {
-                        ui.label("Stats");
-                    }
-                }
-
-                // if ui.button("Abort Watched Task").clicked() {
-                //     state.actions.app_exit = true
-                // }
-
-                // if ui.button("Quit Watchdog and Abort Watched Task").clicked() {
-                //     state.actions.app_exit = true
-                // }
-            });
         },
     )
 }
 
+fn draw_play(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
+    ui.label("Play");
+}
+
+fn draw_stats(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
+    ui.label("Stats");
+}
+
 fn draw_config(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
-    ui.label("Config");
+    ui.heading(egui::RichText::new("Config").color(egui::Color32::from_rgb(238, 238, 238)));
+
+    ui.add_space(12.0);
 
     //
     // config
     //
 
+    /*
     if ui.button("Save config to:").clicked() {
         if let Some(path) = rfd::FileDialog::new()
             .add_filter("json", &["json"])
@@ -521,15 +582,337 @@ fn draw_config(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
     ui.horizontal(|ui| {
         ui.label("Config Filepath");
         let config_filepath_label = state.json.filepath.to_str().unwrap();
-        ui.monospace(config_filepath_label);
+        // ui.monospace(config_filepath_label);
     });
 
     ui.add_space(20.0);
+    */
 
-    let r = ui.text_edit_singleline(&mut config.hello);
-    if r.changed() {
-        config.write(&state.json.filepath);
-    };
+    draw_row(
+        ui,
+        state,
+        "JSON Filepath",
+        &mut state.json.filepath.to_str().unwrap().to_string(),
+        false,
+    );
+
+    draw_separator(ui);
+
+    // App Index Selector
+    ui.horizontal(|ui| {
+        let visuals = ui.visuals_mut();
+
+        visuals.widgets.noninteractive.bg_stroke = egui::Stroke {
+            width: 0.0,
+            color: egui::Color32::TRANSPARENT,
+        };
+
+        // baseline
+        visuals.widgets.inactive.weak_bg_fill = egui::Color32::TRANSPARENT;
+
+        // clicking
+        visuals.widgets.active.weak_bg_fill = egui::Color32::from_rgb(22, 22, 22);
+        visuals.widgets.active.bg_stroke = egui::Stroke {
+            width: 0.0,
+            color: egui::Color32::TRANSPARENT,
+        };
+        visuals.widgets.active.rounding = egui::Rounding {
+            nw: 0.0,
+            sw: 0.0,
+            se: 0.0,
+            ne: 0.0,
+        };
+
+        // hovering
+        visuals.widgets.hovered.weak_bg_fill =
+            egui::Color32::from_rgba_unmultiplied(255, 255, 255, 120);
+        visuals.widgets.hovered.bg_stroke = egui::Stroke {
+            width: 0.0,
+            color: egui::Color32::TRANSPARENT,
+        };
+        visuals.widgets.hovered.rounding = egui::Rounding {
+            nw: 0.0,
+            sw: 0.0,
+            se: 0.0,
+            ne: 0.0,
+        };
+
+        // disabled
+        visuals.widgets.noninteractive.weak_bg_fill = egui::Color32::TRANSPARENT;
+
+        let style = ui.style_mut();
+        style.spacing.button_padding = egui::Vec2::new(4.0, 4.0);
+        style.spacing.window_margin = egui::Margin {
+            left: 0.0,
+            right: 0.0,
+            top: 0.0,
+            bottom: 0.0,
+        };
+        style.spacing.item_spacing = egui::Vec2::new(4.0, 0.0);
+
+        ui.allocate_ui_with_layout(
+            egui::Vec2 {
+                x: ROW_LABEL_WIDTH,
+                y: ROW_HEIGHT,
+            },
+            egui::Layout {
+                main_dir: egui::Direction::LeftToRight,
+                main_wrap: false,
+                main_align: egui::Align::LEFT,
+                main_justify: true,
+                cross_align: egui::Align::Center,
+                cross_justify: true,
+            },
+            |ui| {
+                ui.label(
+                    egui::RichText::new("Watched Apps")
+                        .text_style(egui::TextStyle::Name("Subheading".into()))
+                        .color(egui::Color32::from_rgb(238, 238, 238)),
+                );
+            },
+        );
+
+        ui.allocate_ui_with_layout(
+            egui::Vec2 {
+                x: 50.0, // not enough, but well get more
+                y: ROW_HEIGHT,
+            },
+            egui::Layout {
+                main_dir: egui::Direction::LeftToRight,
+                main_wrap: false,
+                main_align: egui::Align::LEFT,
+                main_justify: false,
+                cross_align: egui::Align::Center,
+                cross_justify: true,
+            },
+            |ui| {
+                ui.add_space(10.0);
+                for i in 0..5 {
+                    let r = ui.add(
+                        egui::Button::new(
+                            egui::RichText::new((i + 1).to_string())
+                                .text_style(egui::TextStyle::Name("TextButton".into()))
+                                .color(egui::Color32::from_rgb(238, 238, 238)),
+                        ), // .min_size(egui::Vec2::new(ROW_HEIGHT, ROW_HEIGHT)),
+                    );
+                    if r.clicked() {
+                        println!("clicked {:?}", i);
+                    }
+                    r.on_hover_cursor(egui::CursorIcon::PointingHand);
+                }
+            },
+        );
+
+        ui.allocate_ui_with_layout(
+            egui::Vec2 {
+                x: ui.available_width(),
+                y: ROW_HEIGHT,
+            },
+            egui::Layout {
+                main_dir: egui::Direction::RightToLeft,
+                main_wrap: false,
+                main_align: egui::Align::RIGHT,
+                main_justify: false,
+                cross_align: egui::Align::Center,
+                cross_justify: true,
+            },
+            |ui| {
+                // Delete
+                let r = ui.add(egui::Button::new(
+                    egui::RichText::new("Delete".to_string())
+                        .text_style(egui::TextStyle::Body)
+                        .color(egui::Color32::from_rgb(238, 238, 238)),
+                ));
+                if r.clicked() {
+                    println!("clicked delete");
+                }
+                r.on_hover_cursor(egui::CursorIcon::PointingHand);
+
+                // New
+                let r = ui.add(egui::Button::new(
+                    egui::RichText::new("Add".to_string())
+                        .text_style(egui::TextStyle::Body)
+                        .color(egui::Color32::from_rgb(238, 238, 238)),
+                ));
+                if r.clicked() {
+                    println!("clicked add");
+                }
+                r.on_hover_cursor(egui::CursorIcon::PointingHand);
+            },
+        );
+    });
+
+    ui.add_space(12.0);
+
+    let current_app_index = 0;
+
+    draw_row(
+        ui,
+        state,
+        "Name",
+        &mut config.watched_apps[current_app_index].name,
+        true,
+    );
+
+    draw_row(
+        ui,
+        state,
+        "Run",
+        &mut config.watched_apps[current_app_index].run,
+        true,
+    );
+
+    draw_row(
+        ui,
+        state,
+        "OSC Port In (Client)",
+        &mut config.watched_apps[current_app_index].osc_in_port,
+        true,
+    );
+
+    draw_row(
+        ui,
+        state,
+        "OSC Port Out (Client)",
+        &mut config.watched_apps[current_app_index].osc_out_port,
+        true,
+    );
+
+    draw_row(
+        ui,
+        state,
+        "Hearbeat OSC Channel",
+        &mut config.watched_apps[current_app_index].heartbeat_channel,
+        true,
+    );
+
+    draw_row(
+        ui,
+        state,
+        "Heartbeat Interval (sec)",
+        &mut config.watched_apps[current_app_index].heartbeat_interval,
+        true,
+    );
+
+    draw_row(
+        ui,
+        state,
+        "Heartbeat Timeout (sec)",
+        &mut config.watched_apps[current_app_index].heartbeat_timeout,
+        true,
+    );
+
+    draw_row(
+        ui,
+        state,
+        "Startup Timeout (sec)",
+        &mut config.watched_apps[current_app_index].startup_timeout,
+        true,
+    );
+
+    draw_row(
+        ui,
+        state,
+        "Restart Delay (sec)",
+        &mut config.watched_apps[current_app_index].restart_delay,
+        true,
+    );
+
+    // filler for scroll testing
+    draw_row(
+        ui,
+        state,
+        "Restart Delay (sec)",
+        &mut config.watched_apps[current_app_index].restart_delay,
+        true,
+    );
+    draw_row(
+        ui,
+        state,
+        "Restart Delay (sec)",
+        &mut config.watched_apps[current_app_index].restart_delay,
+        true,
+    );
+    draw_row(
+        ui,
+        state,
+        "Restart Delay (sec)",
+        &mut config.watched_apps[current_app_index].restart_delay,
+        true,
+    );
+}
+
+fn draw_separator(ui: &mut egui::Ui) {
+    ui.add_space(8.0);
+    ui.horizontal(|ui| {
+        let (rect, _resp) = ui.allocate_exact_size(
+            egui::Vec2::new(ui.available_width(), 1.0),
+            egui::Sense::hover(),
+        );
+        ui.painter_at(rect)
+            .rect_filled(rect, 0.0, egui::Color32::from_rgb(63, 63, 63));
+    });
+    ui.add_space(14.0);
+}
+
+fn draw_row(
+    ui: &mut egui::Ui,
+    state: &mut State,
+    label: &str,
+    prop: &mut String,
+    interactive: bool,
+) {
+    ui.horizontal(|ui| {
+        ui.allocate_ui_with_layout(
+            egui::Vec2 {
+                x: ROW_LABEL_WIDTH,
+                y: ROW_HEIGHT,
+            },
+            egui::Layout {
+                main_dir: egui::Direction::LeftToRight,
+                main_wrap: false,
+                main_align: egui::Align::LEFT,
+                main_justify: true,
+                cross_align: egui::Align::Center,
+                cross_justify: true,
+            },
+            |ui| {
+                ui.label(egui::RichText::new(label).color(egui::Color32::from_rgb(238, 238, 238)));
+            },
+        );
+
+        ui.allocate_ui_with_layout(
+            egui::Vec2 {
+                x: ui.available_width(),
+                y: ROW_HEIGHT,
+            },
+            egui::Layout {
+                main_dir: egui::Direction::LeftToRight,
+                main_wrap: false,
+                main_align: egui::Align::LEFT,
+                main_justify: true,
+                cross_align: egui::Align::Center,
+                cross_justify: true,
+            },
+            |ui| {
+                ui.add_space(10.0);
+                let text_edit = egui::TextEdit::singleline(prop)
+                    .margin(egui::Vec2::new(if interactive { 16.0 } else { 0.0 }, 0.0))
+                    .text_color(egui::Color32::from_rgb(163, 163, 163))
+                    .vertical_align(egui::Align::Center)
+                    .interactive(interactive)
+                    .frame(interactive);
+
+                let r = ui.add(text_edit);
+                if r.changed() {
+                    // config.write(&state.json.filepath);
+                    state.actions.config_edited = true
+                };
+            },
+        );
+    });
+
+    ui.add_space(ROW_MARGIN);
 }
 
 fn format_ms(f: f32) -> String {

@@ -103,11 +103,7 @@ impl epi::backend::RepaintSignal for ExampleRepaintSignal {
     }
 }
 
-pub fn test_redraw(
-    event: &winit::event::Event<'_, ()>,
-    renderer: &mut Renderer,
-    window: &winit::window::Window,
-) -> bool {
+pub fn test_redraw(event: &winit::event::Event<'_, ()>, window: &winit::window::Window) -> bool {
     let mut ready = false;
 
     match event {
@@ -139,7 +135,6 @@ pub fn test_redraw(
 
 // Only runs when we are redrawing
 pub fn render(
-    event: &winit::event::Event<'_, ()>,
     window: &winit::window::Window,
     renderer: &mut Renderer,
     draw_ui: &mut Box<
