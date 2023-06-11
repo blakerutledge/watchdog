@@ -284,13 +284,17 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
                 cross_justify: false,
             },
             |ui| {
+                // Standard format reset for image buttons
                 components::format_imagebuttons(ui);
 
+                // Icon size
                 let icon_w2 = egui::Vec2::new(24.0, 24.0);
+
+                // Gather textures
                 let icon_create = state.ui.textures.get("icon_create").unwrap();
                 let icon_delete = state.ui.textures.get("icon_delete").unwrap();
 
-                // Delete selected Watched Apps
+                // Add Delete button UI
                 let able_to_delete = config.watched_apps.len() > 1;
                 let r_delete = ui.add(
                     egui::ImageButton::new(&icon_delete.1, icon_w2)
@@ -308,7 +312,7 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
 
                 ui.add_space(8.0);
 
-                // Create Additional Watched Apps
+                // Add Create button UI
                 let able_to_create_more = config.watched_apps.len() < config::MAX_WATCHED_APPS;
                 let r_create = ui.add(
                     egui::ImageButton::new(&icon_create.1, icon_w2)
@@ -324,11 +328,17 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
                         }),
                 );
 
-                if r_delete.clicked() {
-                    config::delete_watched_app(config, state);
+                // Interaction for Delete button
+                if able_to_delete {
+                    if r_delete.clicked() {
+                        config::delete_watched_app(config, state);
+                    }
+                    r_delete.on_hover_cursor(egui::CursorIcon::PointingHand);
+                } else {
+                    r_delete.on_hover_cursor(egui::CursorIcon::NotAllowed);
                 }
-                r_delete.on_hover_cursor(egui::CursorIcon::PointingHand);
 
+                // Interaction for Create button
                 if able_to_create_more {
                     if r_create.clicked() {
                         config::create_watched_app(config, state);
