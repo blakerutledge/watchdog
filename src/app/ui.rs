@@ -1,4 +1,4 @@
-use egui::Vec2;
+use egui::{Color32, Vec2};
 
 use crate::app::config::Config;
 use crate::app::state::{State, TabState};
@@ -26,13 +26,17 @@ pub const ROW_MARGIN: f32 = 6.0;
 pub const SECTION_HEADING_MARGIN: f32 = 12.0;
 pub const ROW_GUTTER_SPACE: f32 = 10.0;
 
-pub const COLOR_TEXT_WHITE: egui::Color32 = egui::Color32::from_rgb(238, 238, 238);
-pub const COLOR_MED_GREY: egui::Color32 = egui::Color32::from_rgb(40, 40, 40);
-pub const COLOR_DARK_GREY: egui::Color32 = egui::Color32::from_rgb(29, 29, 29);
-pub const COLOR_DARKER_GREY: egui::Color32 = egui::Color32::from_rgb(22, 22, 22);
-pub const COLOR_TRANSPARENT: egui::Color32 = egui::Color32::TRANSPARENT;
-pub const COLOR_DARK_RED: egui::Color32 = egui::Color32::from_rgb(238, 58, 23);
-pub const COLOR_RED: egui::Color32 = egui::Color32::from_rgb(251, 81, 48);
+pub const COLOR_TRANSPARENT: Color32 = Color32::TRANSPARENT;
+pub const COLOR_TEXT_WHITE: Color32 = Color32::from_rgb(238, 238, 238);
+pub const COLOR_OFFWHITE: Color32 = Color32::from_rgb(163, 163, 163);
+pub const COLOR_LIGHT_GREY: Color32 = Color32::from_rgb(63, 63, 63);
+pub const COLOR_MED_GREY: Color32 = Color32::from_rgb(40, 40, 40);
+pub const COLOR_DARK_GREY: Color32 = Color32::from_rgb(29, 29, 29);
+pub const COLOR_DARKER_GREY: Color32 = Color32::from_rgb(22, 22, 22);
+pub const COLOR_DARK_RED: Color32 = Color32::from_rgb(238, 58, 23);
+pub const COLOR_RED: Color32 = Color32::from_rgb(251, 81, 48);
+pub const COLOR_YELLOW: Color32 = Color32::from_rgb(234, 162, 0);
+// pub const COLOR_WHITE_TINT: Color32 = Color32::from_rgba_unmultiplied(255, 255, 255, 20);
 
 // Init is called once, and returns the reference to the closure that is the primary draw function,
 // that will be called from the primary event loop, and renderer module

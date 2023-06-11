@@ -7,8 +7,7 @@ pub fn draw_separator(ui: &mut egui::Ui) {
             egui::Vec2::new(ui.available_width(), 1.0),
             egui::Sense::hover(),
         );
-        ui.painter_at(rect)
-            .rect_filled(rect, 0.0, egui::Color32::from_rgb(63, 63, 63));
+        ui.painter_at(rect).rect_filled(rect, 0.0, COLOR_LIGHT_GREY);
     });
     ui.add_space(14.0);
 }
@@ -43,7 +42,7 @@ pub fn draw_row(
             |ui| {
                 //
                 // Draw the label
-                ui.label(egui::RichText::new(label).color(COLOR_TEXT_WHITE));
+                ui.label(egui::RichText::new(label).color(COLOR_OFFWHITE));
 
                 // Add margin between label and text entry field
                 ui.add_space(ROW_GUTTER_SPACE);
@@ -71,7 +70,7 @@ pub fn draw_row(
                 // Draw the text entry field
                 let text_edit = egui::TextEdit::singleline(prop)
                     .margin(egui::Vec2::new(if interactive { 16.0 } else { 0.0 }, 0.0))
-                    .text_color(egui::Color32::from_rgb(163, 163, 163))
+                    .text_color(COLOR_TEXT_WHITE)
                     .vertical_align(egui::Align::Center)
                     .interactive(interactive)
                     .frame(interactive);
@@ -91,4 +90,45 @@ pub fn draw_row(
 
 pub fn format_ms(f: f32) -> String {
     format!("{:06.3}", f)
+}
+
+pub fn format_imagebuttons(ui: &mut egui::Ui) {
+    let theme = ui.visuals_mut();
+
+    // baseline
+    theme.widgets.inactive.weak_bg_fill = COLOR_DARKER_GREY;
+
+    // clicking
+    theme.widgets.active.weak_bg_fill = COLOR_YELLOW;
+    theme.widgets.active.bg_stroke = egui::Stroke {
+        width: 0.0,
+        color: COLOR_TRANSPARENT,
+    };
+    theme.widgets.active.rounding = egui::Rounding {
+        nw: 4.0,
+        sw: 4.0,
+        se: 4.0,
+        ne: 4.0,
+    };
+
+    // hovering
+    theme.widgets.hovered.weak_bg_fill = COLOR_DARKER_GREY;
+    theme.widgets.hovered.bg_stroke = egui::Stroke {
+        width: 1.0,
+        color: COLOR_OFFWHITE,
+    };
+    theme.widgets.hovered.rounding = egui::Rounding {
+        nw: 4.0,
+        sw: 4.0,
+        se: 4.0,
+        ne: 4.0,
+    };
+
+    // disabled
+    theme.widgets.noninteractive.weak_bg_fill = COLOR_TRANSPARENT;
+
+    let style = ui.style_mut();
+
+    style.spacing.button_padding = Vec2::new(0.0, 0.0);
+    style.spacing.item_spacing = Vec2::new(0.0, 0.0);
 }

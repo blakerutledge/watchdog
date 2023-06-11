@@ -58,6 +58,7 @@ pub struct UiState {
     pub resize_start_mouse: (u8, u8),
     pub resize_start_corner: (u8, u8),
     pub exit_tooltip_clickout: bool,
+    pub config_watched_app_index: usize,
 }
 
 pub struct Json {
@@ -125,6 +126,7 @@ pub fn init() -> State {
         resize_start_mouse: (0, 0),
         resize_start_corner: (0, 0),
         exit_tooltip_clickout: false,
+        config_watched_app_index: 0,
     };
 
     State {

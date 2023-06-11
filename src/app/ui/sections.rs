@@ -6,18 +6,18 @@ use crate::app::ui::*;
 pub fn style(ui: &mut egui::Ui) {
     let style = ui.style_mut();
 
-    style.spacing.button_padding = egui::Vec2::new(10.0, 10.0);
+    style.spacing.button_padding = Vec2::new(10.0, 10.0);
     style.spacing.scroll_bar_width = 7.0;
     style.spacing.scroll_bar_inner_margin = 2.0;
     style.spacing.scroll_bar_outer_margin = 0.0;
-
+    style.spacing.item_spacing = Vec2::new(0.0, 0.0);
     let visuals = ui.visuals_mut();
-    visuals.extreme_bg_color = egui::Color32::from_rgb(22, 22, 22);
-    visuals.selection.bg_fill = egui::Color32::from_rgba_unmultiplied(255, 255, 255, 20);
+    visuals.extreme_bg_color = COLOR_DARKER_GREY;
+    visuals.selection.bg_fill = Color32::from_rgba_unmultiplied(255, 255, 255, 20); // non-const call
 
     visuals.selection.stroke = egui::Stroke {
         width: 1.0,
-        color: egui::Color32::from_rgba_unmultiplied(234, 162, 0, 255),
+        color: COLOR_YELLOW,
     };
 }
 

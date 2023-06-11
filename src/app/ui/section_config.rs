@@ -1,50 +1,105 @@
-// use crate::app::config;
+use egui::Button;
+
+use crate::app::config;
 use crate::app::ui::*;
 //
 // Config section all ui elements
 //
 
+#[derive(PartialEq)]
+enum ButtonState {
+    Disabled,
+    Normal,
+    Selected,
+    Error,
+}
+
 pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
-    // Header
-    ui.heading(egui::RichText::new("Config").color(COLOR_TEXT_WHITE));
+    //
+    // Header and JSON File Buttons
+    ui.allocate_ui_with_layout(
+        egui::Vec2 {
+            x: ui.available_width(),
+            y: ROW_HEIGHT,
+        },
+        egui::Layout {
+            main_dir: egui::Direction::LeftToRight,
+            main_wrap: false,
+            main_align: egui::Align::LEFT,
+            main_justify: false,
+            cross_align: egui::Align::Center,
+            cross_justify: false,
+        },
+        |ui| {
+            //
+            // Header
+            ui.heading(egui::RichText::new("Config").color(COLOR_TEXT_WHITE));
 
-    ui.add_space(SECTION_HEADING_MARGIN);
+            // Watched Apps Create / Delete Buttons
+            ui.allocate_ui_with_layout(
+                egui::Vec2 {
+                    x: ui.available_width(),
+                    y: ROW_HEIGHT,
+                },
+                egui::Layout {
+                    main_dir: egui::Direction::RightToLeft,
+                    main_wrap: false,
+                    main_align: egui::Align::RIGHT,
+                    main_justify: false,
+                    cross_align: egui::Align::Center,
+                    cross_justify: false,
+                },
+                |ui| {
+                    components::format_imagebuttons(ui);
 
-    /*
-    if ui.button("Save config to:").clicked() {
-        if let Some(path) = rfd::FileDialog::new()
-            .add_filter("json", &["json"])
-            .save_file()
-        {
-            config::move_config(path, state, config);
-        }
-    }
+                    let icon_w = egui::Vec2::new(28.0, 28.0);
 
-    if ui.button("Load config from:").clicked() {
-        if let Some(file) = rfd::FileDialog::new()
-            .add_filter("json", &["json"])
-            .pick_file()
-        {
-            config::replace_from_file(file, state, config);
-        }
-    }
+                    let icon_load = state.ui.textures.get("icon_load").unwrap();
+                    let icon_save = state.ui.textures.get("icon_save").unwrap();
+                    let icon_reset = state.ui.textures.get("icon_reset").unwrap();
 
-    if ui.button("Reset config to defaults:").clicked() {
-        config::reset_config(state, config);
-    }
+                    // Reset Button UI
+                    let r_reset = ui.add(egui::ImageButton::new(&icon_reset.1, icon_w));
+                    ui.add_space(8.0);
+                    // Save Button UI
+                    let r_save = ui.add(egui::ImageButton::new(&icon_save.1, icon_w));
+                    ui.add_space(8.0);
+                    // Load Button UI
+                    let r_load = ui.add(egui::ImageButton::new(&icon_load.1, icon_w));
 
-    if ui.button("Reset to default file:").clicked() {
-        config::reinit_config(state, config);
-    }
+                    // Interaction for Load Button
+                    if r_load.clicked() {
+                        if let Some(file) = rfd::FileDialog::new()
+                            .add_filter("json", &["json"])
+                            .pick_file()
+                        {
+                            config::replace_from_file(file, state, config);
+                        }
+                    }
+                    r_load.on_hover_cursor(egui::CursorIcon::PointingHand);
 
-    ui.horizontal(|ui| {
-        ui.label("Config Filepath");
-        let config_filepath_label = state.json.filepath.to_str().unwrap();
-        // ui.monospace(config_filepath_label);
-    });
-    */
+                    // Interaction for Save Button
+                    if r_save.clicked() {
+                        if let Some(path) = rfd::FileDialog::new()
+                            .add_filter("json", &["json"])
+                            .save_file()
+                        {
+                            config::move_config(path, state, config);
+                        }
+                    }
+                    r_save.on_hover_cursor(egui::CursorIcon::PointingHand);
 
-    ui.add_space(20.0);
+                    // interaction for Reset Button
+                    if r_reset.clicked() {
+                        config::reinit_config(state, config);
+                    }
+                    r_reset.on_hover_cursor(egui::CursorIcon::PointingHand);
+                },
+            );
+        },
+    );
+
+    ui.add_space(4.0);
 
     components::draw_row(
         ui,
@@ -54,60 +109,52 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
         false,
     );
 
+    ui.add_space(SECTION_HEADING_MARGIN);
+
     components::draw_separator(ui);
 
-    // App Index Selector
+    //
+    // Watched App - Index Selector
+    //
     ui.horizontal(|ui| {
         let visuals = ui.visuals_mut();
+        //
+        // Clear button styles
+        //
 
+        // disabled
+        visuals.widgets.noninteractive.weak_bg_fill = COLOR_TRANSPARENT;
         visuals.widgets.noninteractive.bg_stroke = egui::Stroke {
             width: 0.0,
             color: COLOR_TRANSPARENT,
         };
 
-        // baseline
+        // not selected
         visuals.widgets.inactive.weak_bg_fill = COLOR_TRANSPARENT;
-
-        // clicking
-        visuals.widgets.active.weak_bg_fill = COLOR_DARKER_GREY;
-        visuals.widgets.active.bg_stroke = egui::Stroke {
+        visuals.widgets.inactive.bg_stroke = egui::Stroke {
             width: 0.0,
             color: COLOR_TRANSPARENT,
         };
-        visuals.widgets.active.rounding = egui::Rounding {
-            nw: 0.0,
-            sw: 0.0,
-            se: 0.0,
-            ne: 0.0,
-        };
 
-        // hovering
-        visuals.widgets.hovered.weak_bg_fill =
-            egui::Color32::from_rgba_unmultiplied(255, 255, 255, 120);
+        // hovered
+        visuals.widgets.hovered.weak_bg_fill = COLOR_TRANSPARENT;
         visuals.widgets.hovered.bg_stroke = egui::Stroke {
             width: 0.0,
             color: COLOR_TRANSPARENT,
         };
-        visuals.widgets.hovered.rounding = egui::Rounding {
-            nw: 0.0,
-            sw: 0.0,
-            se: 0.0,
-            ne: 0.0,
-        };
 
-        // disabled
-        visuals.widgets.noninteractive.weak_bg_fill = COLOR_TRANSPARENT;
+        // selected
+        visuals.widgets.active.weak_bg_fill = COLOR_TRANSPARENT;
+        visuals.widgets.active.bg_stroke = egui::Stroke {
+            width: 0.0,
+            color: COLOR_TRANSPARENT,
+        };
 
         let style = ui.style_mut();
-        style.spacing.button_padding = egui::Vec2::new(4.0, 4.0);
-        style.spacing.window_margin = egui::Margin {
-            left: 0.0,
-            right: 0.0,
-            top: 0.0,
-            bottom: 0.0,
-        };
-        style.spacing.item_spacing = egui::Vec2::new(4.0, 0.0);
+        style.spacing.button_padding = egui::Vec2::new(0.0, 0.0);
+        style.spacing.item_spacing = egui::Vec2::new(0.0, 0.0);
 
+        // Watched Apps Label
         ui.allocate_ui_with_layout(
             egui::Vec2 {
                 x: ROW_LABEL_WIDTH,
@@ -132,6 +179,7 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
             },
         );
 
+        // Watched Apps Index Buttons
         ui.allocate_ui_with_layout(
             egui::Vec2 {
                 x: 50.0, // does not allocate enough space, but well get more automatically
@@ -146,23 +194,79 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
                 cross_justify: true,
             },
             |ui| {
-                ui.add_space(10.0);
+                let button_width = 18.0;
+                let num_apps = config.watched_apps.len();
                 for i in 0..5 {
-                    let r = ui.add(
-                        egui::Button::new(
-                            egui::RichText::new((i + 1).to_string())
-                                .text_style(egui::TextStyle::Name("TextButton".into()))
-                                .color(COLOR_TEXT_WHITE),
-                        ), // .min_size(egui::Vec2::new(ROW_HEIGHT, ROW_HEIGHT)),
+                    //
+                    // Button State
+                    let b_state = if false {
+                        // i >= num_apps {
+                        ButtonState::Disabled
+                    } else if i == state.ui.config_watched_app_index {
+                        ButtonState::Selected
+                    } else {
+                        ButtonState::Normal
+                    };
+                    // To Do: Error state
+
+                    // Button Wrapper
+                    let (rect, response) =
+                        ui.allocate_exact_size(Vec2::new(button_width, 14.0), egui::Sense::click());
+
+                    let hover = response.hovered();
+
+                    let mut child_ui = ui.child_ui(
+                        rect,
+                        egui::Layout {
+                            main_dir: egui::Direction::TopDown,
+                            main_wrap: false,
+                            main_align: egui::Align::BOTTOM,
+                            main_justify: true,
+                            cross_align: egui::Align::Center,
+                            cross_justify: true,
+                        },
                     );
-                    if r.clicked() {
+
+                    // Label
+                    let _b = child_ui.label(
+                        egui::RichText::new((i + 1).to_string())
+                            .text_style(egui::TextStyle::Name("TextButton".into()))
+                            .color(match b_state {
+                                ButtonState::Disabled => COLOR_MED_GREY,
+                                ButtonState::Selected => COLOR_TEXT_WHITE,
+                                ButtonState::Normal => COLOR_OFFWHITE,
+                                ButtonState::Error => COLOR_RED,
+                            }),
+                    );
+
+                    child_ui.add_space(4.0);
+
+                    // Underline
+                    let (underline_rect, _resp) = child_ui
+                        .allocate_exact_size(Vec2::new(button_width, 2.0), egui::Sense::hover());
+
+                    child_ui.painter().rect(
+                        underline_rect,
+                        0.0,
+                        if hover || b_state == ButtonState::Selected {
+                            COLOR_YELLOW
+                        } else {
+                            COLOR_TRANSPARENT
+                        },
+                        egui::Stroke::new(0.0, COLOR_TRANSPARENT),
+                    );
+
+                    if response.clicked() {
                         println!("clicked {:?}", i);
                     }
-                    r.on_hover_cursor(egui::CursorIcon::PointingHand);
+                    response.on_hover_cursor(egui::CursorIcon::PointingHand);
+
+                    ui.add_space(6.0);
                 }
             },
         );
 
+        // Watched Apps Create / Delete Buttons
         ui.allocate_ui_with_layout(
             egui::Vec2 {
                 x: ui.available_width(),
@@ -174,28 +278,28 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
                 main_align: egui::Align::RIGHT,
                 main_justify: false,
                 cross_align: egui::Align::Center,
-                cross_justify: true,
+                cross_justify: false,
             },
             |ui| {
-                // Delete
-                let r = ui.add(egui::Button::new(
-                    egui::RichText::new("Delete".to_string())
-                        .text_style(egui::TextStyle::Body)
-                        .color(COLOR_TEXT_WHITE),
-                ));
+                components::format_imagebuttons(ui);
+
+                let icon_w2 = egui::Vec2::new(24.0, 24.0);
+                let icon_create = state.ui.textures.get("icon_create").unwrap();
+                let icon_delete = state.ui.textures.get("icon_delete").unwrap();
+
+                // New
+                let r = ui.add(egui::ImageButton::new(&icon_delete.1, icon_w2));
                 if r.clicked() {
                     println!("clicked delete");
                 }
                 r.on_hover_cursor(egui::CursorIcon::PointingHand);
 
-                // New
-                let r = ui.add(egui::Button::new(
-                    egui::RichText::new("Add".to_string())
-                        .text_style(egui::TextStyle::Body)
-                        .color(COLOR_TEXT_WHITE),
-                ));
+                ui.add_space(8.0);
+
+                // Delete
+                let r = ui.add(egui::ImageButton::new(&icon_create.1, icon_w2));
                 if r.clicked() {
-                    println!("clicked add");
+                    println!("clicked create");
                 }
                 r.on_hover_cursor(egui::CursorIcon::PointingHand);
             },
