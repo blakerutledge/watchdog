@@ -1,5 +1,5 @@
 use super::state::State;
-use super::utils::now;
+use crate::utils::now;
 
 use std::time::Duration;
 use std::{f32, u32};

@@ -1,10 +1,8 @@
 use super::state::State;
-use email_address::EmailAddress;
+// use email_address::EmailAddress;
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::str::FromStr;
-use windows_sys::Win32::Foundation::WININET_E_FAILED_DUETOSECURITYCHECK;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Result;

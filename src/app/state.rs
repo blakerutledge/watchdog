@@ -55,6 +55,7 @@ pub struct UiState {
     pub resizing: bool,
     pub resize_start_mouse: (u8, u8),
     pub resize_start_corner: (u8, u8),
+    pub exit_tooltip_clickout: bool,
 }
 
 pub struct Json {
@@ -67,7 +68,7 @@ pub struct Json {
 
 pub enum TabState {
     Config,
-    Play,
+    Apps,
     Stats,
 }
 
@@ -119,6 +120,7 @@ pub fn init() -> State {
         resizing: false,
         resize_start_mouse: (0, 0),
         resize_start_corner: (0, 0),
+        exit_tooltip_clickout: false,
     };
 
     State {
