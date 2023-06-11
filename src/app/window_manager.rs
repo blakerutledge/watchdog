@@ -71,6 +71,9 @@ pub fn update(
     state: &mut super::state::State,
 ) {
     match event {
+        winit::event::Event::MainEventsCleared => {
+            window.request_redraw();
+        }
         winit::event::Event::WindowEvent { event, .. } => match event {
             //
             // Close Window Event
@@ -95,8 +98,6 @@ pub fn update(
                                     window_size.height as f64,
                                 ));
                             }
-
-                            // TO DO: finish manually enforcing min & max window size limits
                             ResizeDirection::North => {
                                 // clamp
                                 let (h, y) = if window_size.height as f64 - position.y
@@ -260,8 +261,6 @@ pub fn update(
                                 ));
                             }
                         }
-
-                        // window.request_redraw();
                     } else {
                         if true {
                             let new_location =
@@ -269,7 +268,6 @@ pub fn update(
 
                             if new_location != state.ui.cursor_location {
                                 state.ui.cursor_location = new_location;
-                                // window.set_cursor_icon(cursor_direction_icon(state.ui.cursor_location))
                                 state.ui.cursor_icon =
                                     cursor_direction_icon(state.ui.cursor_location);
                             }
@@ -305,10 +303,6 @@ pub fn update(
             //
             _ => {}
         },
-        winit::event::Event::MainEventsCleared => {
-            window.request_redraw();
-            // ready = true;
-        }
         _ => {}
     }
 }

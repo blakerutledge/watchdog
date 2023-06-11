@@ -59,5 +59,7 @@ pub fn load(state: &mut State, context: &egui::Context) {
 
         // set flag to true so we only do this once
         state.ui.custom_fonts = true;
+
+        println!("Loaded custom fonts");
     }
 }

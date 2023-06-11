@@ -60,7 +60,7 @@ pub fn init(window: &winit::window::Window) -> Renderer {
         format: surface_format,
         width: size.width as u32,
         height: size.height as u32,
-        present_mode: wgpu::PresentMode::Immediate,
+        present_mode: wgpu::PresentMode::Fifo,
         alpha_mode: surface_caps.alpha_modes[0],
         view_formats: vec![],
     };
@@ -107,26 +107,8 @@ pub fn test_redraw(event: &winit::event::Event<'_, ()>, window: &winit::window::
     let mut ready = false;
 
     match event {
-        // Fix this to use threads .. maybe?
-        // winit::event::Event::RedrawRequested(..) => {
-        // winit::event::Event::MainEventsCleared => {
-        // window.request_redraw();
-        // ready = true;
-        // }
-
-        // winit::event::Event::UserEvent(e) => {
-        // match e {
-        // Event::RequestRedraw => {
-        // window.request_redraw();
-        // }
-        // _ => {}
-        // }
-        // Event::RequestRedraw => {
-        // }
         winit::event::Event::RedrawRequested(window_id) => {
-            // dbg!(window_id);
             ready = &window.id() == window_id;
-            // println!("redraw");
         }
         _ => {}
     }
@@ -224,19 +206,21 @@ pub fn render(
         )
         .unwrap();
 
+    // Stop the timer, we are done creating the UI texture, it waits until the display wants to use the texture
+    perf::finish_frame(state);
+
     // Submit the commands.
+    // Waits until the display is ready to receive it
     renderer.queue.submit(std::iter::once(encoder.finish()));
 
-    // Redraw egui
+    // Schedule the texture to be presented to the surface
     output_frame.present();
 
+    // Clear the frame
     renderer
         .egui_rpass
         .remove_textures(tdelta)
         .expect("remove texture ok");
-
-    // Stop the timer
-    perf::finish_frame(state);
 }
 
 // RUNS for all events in winit event loop

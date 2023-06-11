@@ -65,5 +65,14 @@ pub fn finish_frame(state: &mut State) {
 
     // This likes to flicker between 60/61 fps, keep it sane, limited
     // to the monitor refresh rate
-    state.perf.fps = count; //std::cmp::min(count, state.perf.monitor_refresh_rate);
+    state.perf.fps = if count - 1 == state.perf.monitor_refresh_rate {
+        // under low load, the ticker will flutter between 60 & 61.
+        // If its 61, just show 60;
+        // BUT do not clamp the value to the display rate, in case the
+        // event loop is firing too fast, like if we set the renderer
+        // surface PresentMode to Immediate
+        count - 1
+    } else {
+        count
+    };
 }

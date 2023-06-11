@@ -82,48 +82,32 @@ fn update(
     // Tray Event update step, parse events and affect state
     tray_manager::update(tray_menu, state);
 
-    // Apply any changes to the state
-    apply(
-        control_flow,
-        window,
-        tray,
-        state,
-        config,
-        // renderer,
-        // tray_menu,
-        // ui_draw_call,
-    );
-
     // Only draw as fast as the GPU says we should
     let redraw = renderer::test_redraw(event, window);
     if redraw {
+        // Start the timer
         perf::start_frame(state);
 
         // Draw Window UI + affect state (immediate mode)
         renderer::render(window, renderer, ui_draw_call, state, config);
-
-        // Set to Poll instead of Wait on Windows so we can actually
-        // capture the tray left click event when it happens
-        // let i = state.perf.frames.len() - 1;
-        // let ft = state.perf.frames[i]
-        //     .stop
-        //     .checked_sub(state.perf.frames[i].start)
-        //     .unwrap_or_default()
-        //     .as_millis() as u64;
-
-        // let ft = if ft < 16 {
-        //     std::cmp::max(0, 16 - ft)
-        // } else {
-        //     1
-        // };
-
-        // *control_flow = winit::event_loop::ControlFlow::WaitUntil(
-        //     std::time::Instant::now() + std::time::Duration::from_millis(10),
-        // );
+        //
+        // Note: timer is finished within the above render call
     }
-    *control_flow = winit::event_loop::ControlFlow::WaitUntil(
-        std::time::Instant::now() + std::time::Duration::from_millis(12),
-    );
+
+    // If window is visible, the display will throttle the event loop to the display refresh rate
+    if window.is_visible().unwrap_or(false) {
+        *control_flow = winit::event_loop::ControlFlow::Poll;
+    }
+    // If the window is close, and the app is running in the background,
+    // manually throttle the event loop to ~60Hz
+    else {
+        *control_flow = winit::event_loop::ControlFlow::WaitUntil(
+            std::time::Instant::now() + std::time::Duration::from_millis(14),
+        );
+    }
+
+    // Apply any changes to the state
+    apply(control_flow, window, tray, state, config);
 }
 
 ///

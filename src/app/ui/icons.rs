@@ -62,7 +62,7 @@ pub fn load(state: &mut State, context: &egui::Context) {
         for (slug, data) in state.ui.asset_map.iter() {
             if !state.ui.textures.contains_key(slug) {
                 create_tex(data, slug, context, &mut state.ui.textures);
-                println!("created {slug} texture");
+                println!("Created texture for icon: {slug}");
             }
         }
     }
