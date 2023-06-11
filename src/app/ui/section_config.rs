@@ -1,5 +1,3 @@
-use egui::Button;
-
 use crate::app::config;
 use crate::app::ui::*;
 //
@@ -101,6 +99,7 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
 
     ui.add_space(4.0);
 
+    // Display filepath to current JSON config file
     components::draw_row(
         ui,
         state,
@@ -196,11 +195,10 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
             |ui| {
                 let button_width = 18.0;
                 let num_apps = config.watched_apps.len();
-                for i in 0..5 {
+                for i in 0..config::MAX_WATCHED_APPS {
                     //
                     // Button State
-                    let b_state = if false {
-                        // i >= num_apps {
+                    let b_state = if i >= num_apps {
                         ButtonState::Disabled
                     } else if i == state.ui.config_watched_app_index {
                         ButtonState::Selected
@@ -232,7 +230,7 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
                         egui::RichText::new((i + 1).to_string())
                             .text_style(egui::TextStyle::Name("TextButton".into()))
                             .color(match b_state {
-                                ButtonState::Disabled => COLOR_MED_GREY,
+                                ButtonState::Disabled => COLOR_LIGHT_GREY,
                                 ButtonState::Selected => COLOR_TEXT_WHITE,
                                 ButtonState::Normal => COLOR_OFFWHITE,
                                 ButtonState::Error => COLOR_RED,
@@ -248,7 +246,9 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
                     child_ui.painter().rect(
                         underline_rect,
                         0.0,
-                        if hover || b_state == ButtonState::Selected {
+                        if hover && b_state != ButtonState::Disabled
+                            || b_state == ButtonState::Selected
+                        {
                             COLOR_YELLOW
                         } else {
                             COLOR_TRANSPARENT
@@ -256,10 +256,13 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
                         egui::Stroke::new(0.0, COLOR_TRANSPARENT),
                     );
 
-                    if response.clicked() {
-                        println!("clicked {:?}", i);
+                    // Only allow clicks on non-disabled indeces
+                    if b_state != ButtonState::Disabled {
+                        if response.clicked() {
+                            state.ui.config_watched_app_index = i;
+                        }
+                        response.on_hover_cursor(egui::CursorIcon::PointingHand);
                     }
-                    response.on_hover_cursor(egui::CursorIcon::PointingHand);
 
                     ui.add_space(6.0);
                 }
@@ -287,34 +290,64 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
                 let icon_create = state.ui.textures.get("icon_create").unwrap();
                 let icon_delete = state.ui.textures.get("icon_delete").unwrap();
 
-                // New
-                let r = ui.add(egui::ImageButton::new(&icon_delete.1, icon_w2));
-                if r.clicked() {
-                    println!("clicked delete");
-                }
-                r.on_hover_cursor(egui::CursorIcon::PointingHand);
+                // Delete selected Watched Apps
+                let able_to_delete = config.watched_apps.len() > 1;
+                let r_delete = ui.add(
+                    egui::ImageButton::new(&icon_delete.1, icon_w2)
+                        .tint(if able_to_delete {
+                            COLOR_WHITE
+                        } else {
+                            COLOR_GRAY_TINT
+                        })
+                        .sense(if able_to_delete {
+                            egui::Sense::click()
+                        } else {
+                            egui::Sense::hover()
+                        }),
+                );
 
                 ui.add_space(8.0);
 
-                // Delete
-                let r = ui.add(egui::ImageButton::new(&icon_create.1, icon_w2));
-                if r.clicked() {
-                    println!("clicked create");
+                // Create Additional Watched Apps
+                let able_to_create_more = config.watched_apps.len() < config::MAX_WATCHED_APPS;
+                let r_create = ui.add(
+                    egui::ImageButton::new(&icon_create.1, icon_w2)
+                        .tint(if able_to_create_more {
+                            COLOR_WHITE
+                        } else {
+                            COLOR_GRAY_TINT
+                        })
+                        .sense(if able_to_create_more {
+                            egui::Sense::click()
+                        } else {
+                            egui::Sense::hover()
+                        }),
+                );
+
+                if r_delete.clicked() {
+                    config::delete_watched_app(config, state);
                 }
-                r.on_hover_cursor(egui::CursorIcon::PointingHand);
+                r_delete.on_hover_cursor(egui::CursorIcon::PointingHand);
+
+                if able_to_create_more {
+                    if r_create.clicked() {
+                        config::create_watched_app(config, state);
+                    }
+                    r_create.on_hover_cursor(egui::CursorIcon::PointingHand);
+                } else {
+                    r_create.on_hover_cursor(egui::CursorIcon::NotAllowed);
+                }
             },
         );
     });
 
     ui.add_space(12.0);
 
-    let current_app_index = 0;
-
     components::draw_row(
         ui,
         state,
         "Name",
-        &mut config.watched_apps[current_app_index].name,
+        &mut config.watched_apps[state.ui.config_watched_app_index].name,
         true,
     );
 
@@ -322,7 +355,7 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
         ui,
         state,
         "Run",
-        &mut config.watched_apps[current_app_index].run,
+        &mut config.watched_apps[state.ui.config_watched_app_index].run,
         true,
     );
 
@@ -330,7 +363,7 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
         ui,
         state,
         "OSC Port In (Client)",
-        &mut config.watched_apps[current_app_index].osc_in_port,
+        &mut config.watched_apps[state.ui.config_watched_app_index].osc_in_port,
         true,
     );
 
@@ -338,7 +371,7 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
         ui,
         state,
         "OSC Port Out (Client)",
-        &mut config.watched_apps[current_app_index].osc_out_port,
+        &mut config.watched_apps[state.ui.config_watched_app_index].osc_out_port,
         true,
     );
 
@@ -346,7 +379,7 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
         ui,
         state,
         "Hearbeat OSC Channel",
-        &mut config.watched_apps[current_app_index].heartbeat_channel,
+        &mut config.watched_apps[state.ui.config_watched_app_index].heartbeat_channel,
         true,
     );
 
@@ -354,7 +387,7 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
         ui,
         state,
         "Heartbeat Interval (sec)",
-        &mut config.watched_apps[current_app_index].heartbeat_interval,
+        &mut config.watched_apps[state.ui.config_watched_app_index].heartbeat_interval,
         true,
     );
 
@@ -362,7 +395,7 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
         ui,
         state,
         "Heartbeat Timeout (sec)",
-        &mut config.watched_apps[current_app_index].heartbeat_timeout,
+        &mut config.watched_apps[state.ui.config_watched_app_index].heartbeat_timeout,
         true,
     );
 
@@ -370,7 +403,7 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
         ui,
         state,
         "Startup Timeout (sec)",
-        &mut config.watched_apps[current_app_index].startup_timeout,
+        &mut config.watched_apps[state.ui.config_watched_app_index].startup_timeout,
         true,
     );
 
@@ -378,7 +411,7 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
         ui,
         state,
         "Restart Delay (sec)",
-        &mut config.watched_apps[current_app_index].restart_delay,
+        &mut config.watched_apps[state.ui.config_watched_app_index].restart_delay,
         true,
     );
 
@@ -387,21 +420,97 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
         ui,
         state,
         "Restart Delay (sec)",
-        &mut config.watched_apps[current_app_index].restart_delay,
+        &mut config.watched_apps[state.ui.config_watched_app_index].restart_delay,
         true,
     );
     components::draw_row(
         ui,
         state,
         "Restart Delay (sec)",
-        &mut config.watched_apps[current_app_index].restart_delay,
+        &mut config.watched_apps[state.ui.config_watched_app_index].restart_delay,
         true,
     );
     components::draw_row(
         ui,
         state,
         "Restart Delay (sec)",
-        &mut config.watched_apps[current_app_index].restart_delay,
+        &mut config.watched_apps[state.ui.config_watched_app_index].restart_delay,
+        true,
+    );
+
+    components::draw_separator(ui);
+
+    //
+    // Email Alerts
+    //
+
+    ui.horizontal(|ui| {
+        // let visuals = ui.visuals_mut();
+        // Watched Apps Label
+        ui.allocate_ui_with_layout(
+            egui::Vec2 {
+                x: ROW_LABEL_WIDTH,
+                y: ROW_HEIGHT,
+            },
+            egui::Layout {
+                main_dir: egui::Direction::LeftToRight,
+                main_wrap: false,
+                main_align: egui::Align::LEFT,
+                main_justify: true,
+                cross_align: egui::Align::Center,
+                cross_justify: true,
+            },
+            |ui| {
+                ui.label(
+                    egui::RichText::new("Email Alerts")
+                        .text_style(egui::TextStyle::Name("Subheading".into()))
+                        .color(COLOR_TEXT_WHITE),
+                );
+
+                ui.add_space(ROW_GUTTER_SPACE);
+            },
+        );
+    });
+
+    ui.add_space(ROW_MARGIN);
+
+    components::draw_row(
+        ui,
+        state,
+        "Gmail Client",
+        &mut config.email_client.address,
+        true,
+    );
+
+    components::draw_row(
+        ui,
+        state,
+        "Gmail Password",
+        &mut config.email_client.password,
+        true,
+    );
+
+    components::draw_row(
+        ui,
+        state,
+        "Email on Success",
+        &mut config.email_client.email_on_startup,
+        true,
+    );
+
+    components::draw_row(
+        ui,
+        state,
+        "Email on Failure",
+        &mut config.email_client.email_on_failure,
+        true,
+    );
+
+    components::draw_row(
+        ui,
+        state,
+        "Email limit per Day",
+        &mut config.email_client.limit_per_day,
         true,
     );
 }

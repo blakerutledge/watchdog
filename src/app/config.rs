@@ -9,6 +9,7 @@ use serde_json::Result;
 
 const WATCHDOG_STORE_FILENAME: &str = ".watchdog_store";
 const DEFAULT_CONFIG_FILENAME: &str = "watchdog_config.json";
+pub const MAX_WATCHED_APPS: usize = 5;
 
 //
 // Store
@@ -92,13 +93,30 @@ pub struct WatchedApp {
     pub restart_delay: String,
 }
 
+impl WatchedApp {
+    pub fn default() -> Self {
+        Self {
+            name: "demo".to_string(),
+            run: "demo.exe".to_string(),
+            osc_in_port: "1234".to_string(),
+            osc_out_port: "1235".to_string(),
+            heartbeat_channel: "/heart".to_string(),
+            heartbeat_interval: "1".to_string(),
+            heartbeat_timeout: "5".to_string(),
+            startup_timeout: "30".to_string(),
+            restart_delay: "30".to_string(),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct EmailClient {
-    enabled: bool,
-    address: String,
-    password: String,
-    email_on_startup: Vec<String>,
-    email_on_failure: Vec<String>,
+    pub enabled: bool,
+    pub address: String,
+    pub password: String,
+    pub email_on_startup: String,
+    pub email_on_failure: String,
+    pub limit_per_day: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -117,23 +135,14 @@ impl Config {
     fn default() -> Self {
         Self {
             hello: "world".to_string(),
-            watched_apps: vec![WatchedApp {
-                name: "demo".to_string(),
-                run: "demo.exe".to_string(),
-                osc_in_port: "1234".to_string(),
-                osc_out_port: "1235".to_string(),
-                heartbeat_channel: "/heart".to_string(),
-                heartbeat_interval: "1".to_string(),
-                heartbeat_timeout: "5".to_string(),
-                startup_timeout: "30".to_string(),
-                restart_delay: "30".to_string(),
-            }],
+            watched_apps: vec![WatchedApp::default()],
             email_client: EmailClient {
                 enabled: false,
                 address: "example@gmail.com".to_string(),
                 password: "password1234".to_string(),
-                email_on_startup: vec!["blake@blakerutledge.com".to_string()],
-                email_on_failure: vec!["blake@blakerutledge.com".to_string()],
+                email_on_startup: "blake@blakerutledge.com".to_string(),
+                email_on_failure: "blake@blakerutledge.com".to_string(),
+                limit_per_day: "3".to_string(),
             },
         }
     }
@@ -242,6 +251,46 @@ pub fn init(state: &mut State) -> Config {
     */
 }
 
+pub fn create_watched_app(config: &mut Config, state: &mut State) {
+    // Guard against creating more than the maximum
+    if config.watched_apps.len() < MAX_WATCHED_APPS {
+        config.watched_apps.push(WatchedApp::default());
+        state.actions.config_edited = true;
+        state.ui.config_watched_app_index = config.watched_apps.len() - 1;
+    } else {
+        println!(
+            "Config ERROR cannot create new watched app, already watching the maximum of {:?} apps",
+            MAX_WATCHED_APPS
+        );
+    }
+}
+
+pub fn delete_watched_app(config: &mut Config, state: &mut State) {
+    // Ensure index is in bounds
+    if state.ui.config_watched_app_index >= config.watched_apps.len() {
+        println!(
+            "Config ERROR cannot remove watched app index, out of bounds: {:?}, there are {:?} watched apps", 
+            state.ui.config_watched_app_index,
+            config.watched_apps.len()
+        );
+    }
+    // Ensure we dont delete the last remaining watched app either
+    else if config.watched_apps.len() <= 1 {
+        println!(
+            "Config ERROR cannot remove last remaining watched app, there must be at least one"
+        );
+    } else {
+        let i = state.ui.config_watched_app_index;
+        // currently selected app is about to be out of bounds
+        if state.ui.config_watched_app_index == config.watched_apps.len() - 1 {
+            state.ui.config_watched_app_index -= 1;
+        }
+
+        config.watched_apps.remove(i);
+        state.actions.config_edited = true;
+    }
+}
+
 // Helper to write the Config instance to a new json file, and also update the .watchdog_store reference
 pub fn move_config(file: PathBuf, state: &mut State, config: &mut Config) {
     state.json.filepath = file;
@@ -264,16 +313,21 @@ pub fn replace_from_file(file: PathBuf, state: &mut State, config: &mut Config) 
     }
 }
 
+/*
 pub fn reset_config(state: &mut State, config: &mut Config) {
     let c = Config::default();
     *config = c;
     config.write(&state.json.filepath);
 }
+*/
 
 pub fn reinit_config(state: &mut State, config: &mut Config) {
     // Update path, update store, write
     state.json.filepath = Store::default_config_filepath();
     state.json.store.write(&state.json.filepath);
+
+    // Reset the selected index
+    state.ui.config_watched_app_index = 0;
 
     // Reset config
     let c = Config::default();
