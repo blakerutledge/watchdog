@@ -73,12 +73,6 @@ fn update(
     config: &mut config::Config,
     state: &mut state::State,
 ) {
-    // Set to Poll instead of Wait on Windows so we can actually
-    // capture the tray left click event when it happens
-    *control_flow = winit::event_loop::ControlFlow::WaitUntil(
-        std::time::Instant::now() + std::time::Duration::from_millis(14),
-    );
-
     // Renderer handles a few various winit events outside of redrawing
     renderer::update(event, renderer);
 
@@ -107,7 +101,29 @@ fn update(
 
         // Draw Window UI + affect state (immediate mode)
         renderer::render(window, renderer, ui_draw_call, state, config);
+
+        // Set to Poll instead of Wait on Windows so we can actually
+        // capture the tray left click event when it happens
+        // let i = state.perf.frames.len() - 1;
+        // let ft = state.perf.frames[i]
+        //     .stop
+        //     .checked_sub(state.perf.frames[i].start)
+        //     .unwrap_or_default()
+        //     .as_millis() as u64;
+
+        // let ft = if ft < 16 {
+        //     std::cmp::max(0, 16 - ft)
+        // } else {
+        //     1
+        // };
+
+        // *control_flow = winit::event_loop::ControlFlow::WaitUntil(
+        //     std::time::Instant::now() + std::time::Duration::from_millis(10),
+        // );
     }
+    *control_flow = winit::event_loop::ControlFlow::WaitUntil(
+        std::time::Instant::now() + std::time::Duration::from_millis(12),
+    );
 }
 
 ///

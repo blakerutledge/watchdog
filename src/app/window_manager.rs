@@ -261,7 +261,7 @@ pub fn update(
                             }
                         }
 
-                        window.request_redraw();
+                        // window.request_redraw();
                     } else {
                         if true {
                             let new_location =
@@ -305,6 +305,10 @@ pub fn update(
             //
             _ => {}
         },
+        winit::event::Event::MainEventsCleared => {
+            window.request_redraw();
+            // ready = true;
+        }
         _ => {}
     }
 }

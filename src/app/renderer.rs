@@ -108,10 +108,11 @@ pub fn test_redraw(event: &winit::event::Event<'_, ()>, window: &winit::window::
 
     match event {
         // Fix this to use threads .. maybe?
-        winit::event::Event::MainEventsCleared => {
-            // winit::event::Event::MainEventsCleared => {
-            window.request_redraw();
-        }
+        // winit::event::Event::RedrawRequested(..) => {
+        // winit::event::Event::MainEventsCleared => {
+        // window.request_redraw();
+        // ready = true;
+        // }
 
         // winit::event::Event::UserEvent(e) => {
         // match e {
@@ -122,11 +123,11 @@ pub fn test_redraw(event: &winit::event::Event<'_, ()>, window: &winit::window::
         // }
         // Event::RequestRedraw => {
         // }
-        winit::event::Event::RedrawRequested(..) => {
-            ready = true;
+        winit::event::Event::RedrawRequested(window_id) => {
+            // dbg!(window_id);
+            ready = &window.id() == window_id;
             // println!("redraw");
         }
-
         _ => {}
     }
 
@@ -226,9 +227,6 @@ pub fn render(
     // Submit the commands.
     renderer.queue.submit(std::iter::once(encoder.finish()));
 
-    // Stop the timer, because from here we wait until the display is ready to go again
-    perf::finish_frame(state);
-
     // Redraw egui
     output_frame.present();
 
@@ -236,6 +234,9 @@ pub fn render(
         .egui_rpass
         .remove_textures(tdelta)
         .expect("remove texture ok");
+
+    // Stop the timer
+    perf::finish_frame(state);
 }
 
 // RUNS for all events in winit event loop

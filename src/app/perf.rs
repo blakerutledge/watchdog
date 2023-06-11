@@ -4,7 +4,7 @@ use crate::utils::now;
 use std::time::Duration;
 use std::{f32, u32};
 
-const MAX_FRAME_CACHE: usize = 300;
+const MAX_FRAME_CACHE: usize = 15000;
 
 pub struct Frame {
     pub start: Duration,
@@ -65,5 +65,5 @@ pub fn finish_frame(state: &mut State) {
 
     // This likes to flicker between 60/61 fps, keep it sane, limited
     // to the monitor refresh rate
-    state.perf.fps = std::cmp::min(count, state.perf.monitor_refresh_rate);
+    state.perf.fps = count; //std::cmp::min(count, state.perf.monitor_refresh_rate);
 }
