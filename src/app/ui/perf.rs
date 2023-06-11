@@ -1,9 +1,12 @@
 use crate::app::ui::*;
 
+// TEMP perf overlay
+const SHOW_HOST_DEV: bool = true;
+
+//
+// Show debug statistics relevant to the watchdog host application performance
+//
 pub fn draw(context: &egui::Context, state: &mut State) {
-    //
-    // Show debug statistics relevant to the watchdog host application performance
-    //
     if SHOW_HOST_DEV {
         egui::Window::new("Host Performance")
             .resizable(false)

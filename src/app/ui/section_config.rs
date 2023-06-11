@@ -1,5 +1,5 @@
+// use crate::app::config;
 use crate::app::ui::*;
-
 //
 // Config section all ui elements
 //
@@ -16,7 +16,7 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
             .add_filter("json", &["json"])
             .save_file()
         {
-            super::config::move_config(path, state, config);
+            config::move_config(path, state, config);
         }
     }
 
@@ -25,16 +25,16 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
             .add_filter("json", &["json"])
             .pick_file()
         {
-            super::config::replace_from_file(file, state, config);
+            config::replace_from_file(file, state, config);
         }
     }
 
     if ui.button("Reset config to defaults:").clicked() {
-        super::config::reset_config(state, config);
+        config::reset_config(state, config);
     }
 
     if ui.button("Reset to default file:").clicked() {
-        super::config::reinit_config(state, config);
+        config::reinit_config(state, config);
     }
 
     ui.horizontal(|ui| {
@@ -42,9 +42,9 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
         let config_filepath_label = state.json.filepath.to_str().unwrap();
         // ui.monospace(config_filepath_label);
     });
+    */
 
     ui.add_space(20.0);
-    */
 
     components::draw_row(
         ui,
@@ -127,6 +127,8 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
                         .text_style(egui::TextStyle::Name("Subheading".into()))
                         .color(COLOR_TEXT_WHITE),
                 );
+
+                ui.add_space(ROW_GUTTER_SPACE);
             },
         );
 

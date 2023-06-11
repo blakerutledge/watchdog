@@ -18,15 +18,13 @@ mod sections;
 mod title_bar;
 mod typography;
 
-// TEMP perf overlay
-const SHOW_HOST_DEV: bool = false;
-
 // GLOBAL constants across submodules
 pub const ROW_LABEL_WIDTH: f32 = 200.0;
 pub const ROW_HEIGHT: f32 = 36.0;
 pub const ROW_MARGIN: f32 = 6.0;
 
 pub const SECTION_HEADING_MARGIN: f32 = 12.0;
+pub const ROW_GUTTER_SPACE: f32 = 10.0;
 
 pub const COLOR_TEXT_WHITE: egui::Color32 = egui::Color32::from_rgb(238, 238, 238);
 pub const COLOR_MED_GREY: egui::Color32 = egui::Color32::from_rgb(40, 40, 40);
@@ -38,7 +36,11 @@ pub const COLOR_RED: egui::Color32 = egui::Color32::from_rgb(251, 81, 48);
 
 // Init is called once, and returns the reference to the closure that is the primary draw function,
 // that will be called from the primary event loop, and renderer module
-pub fn init() -> Box<dyn FnMut(&egui::Context, &mut State, &mut Config, &winit::window::Window)> {
+pub fn init(
+    state: &mut State,
+) -> Box<dyn FnMut(&egui::Context, &mut State, &mut Config, &winit::window::Window)> {
+    icons::init(state);
+
     Box::new(
         |context: &egui::Context,
          state: &mut State,

@@ -47,7 +47,7 @@ pub fn draw(context: &egui::Context, state: &mut State, config: &mut Config) {
                 })
                 // apply the rounding of top left corner only
                 .rounding(egui::Rounding {
-                    nw: 4.0,
+                    nw: 8.0,
                     sw: 0.0,
                     se: 0.0,
                     ne: 0.0,

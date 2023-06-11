@@ -36,7 +36,7 @@ pub fn init() {
     let (mut tray, tray_menu) = tray_manager::init();
 
     // Create the UI
-    let mut ui_draw_call = ui::init();
+    let mut ui_draw_call = ui::init(&mut state);
 
     // Initialize the performance tracker
     perf::start_app(&mut state);

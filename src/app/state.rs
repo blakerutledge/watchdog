@@ -44,7 +44,9 @@ pub struct Perf {
 }
 
 pub struct UiState {
-    pub textures: HashMap<String, (egui::Vec2, egui::TextureHandle)>,
+    pub asset_map: HashMap<&'static str, &'static [u8]>,
+    pub textures: HashMap<&'static str, (egui::Vec2, egui::TextureHandle)>,
+    pub loaded_textures: bool,
     pub custom_fonts: bool,
     pub active_tab: TabState,
     pub show_exit_tooltip: bool,
@@ -106,8 +108,10 @@ pub fn init() -> State {
     };
 
     let ui = UiState {
+        asset_map: HashMap::new(),
         textures: HashMap::new(),
         custom_fonts: false,
+        loaded_textures: false,
         // tab_config: true,
         // tab_play: false,
         // tab_stats: false,

@@ -13,6 +13,9 @@ pub fn draw_separator(ui: &mut egui::Ui) {
     ui.add_space(14.0);
 }
 
+//
+// Helper for drawing a standard label and text entry field
+//
 pub fn draw_row(
     ui: &mut egui::Ui,
     state: &mut State,
@@ -21,6 +24,9 @@ pub fn draw_row(
     interactive: bool,
 ) {
     ui.horizontal(|ui| {
+        //
+        // Label with minimum width
+        //
         ui.allocate_ui_with_layout(
             egui::Vec2 {
                 x: ROW_LABEL_WIDTH,
@@ -35,10 +41,18 @@ pub fn draw_row(
                 cross_justify: true,
             },
             |ui| {
+                //
+                // Draw the label
                 ui.label(egui::RichText::new(label).color(COLOR_TEXT_WHITE));
+
+                // Add margin between label and text entry field
+                ui.add_space(ROW_GUTTER_SPACE);
             },
         );
 
+        //
+        // Text entry field takes rest of available space
+        //
         ui.allocate_ui_with_layout(
             egui::Vec2 {
                 x: ui.available_width(),
@@ -53,7 +67,8 @@ pub fn draw_row(
                 cross_justify: true,
             },
             |ui| {
-                ui.add_space(10.0);
+                //
+                // Draw the text entry field
                 let text_edit = egui::TextEdit::singleline(prop)
                     .margin(egui::Vec2::new(if interactive { 16.0 } else { 0.0 }, 0.0))
                     .text_color(egui::Color32::from_rgb(163, 163, 163))
@@ -61,15 +76,16 @@ pub fn draw_row(
                     .interactive(interactive)
                     .frame(interactive);
 
+                // Update the state to act on any changes this frame
                 let r = ui.add(text_edit);
                 if r.changed() {
-                    // config.write(&state.json.filepath);
                     state.actions.config_edited = true
                 };
             },
         );
     });
 
+    // Add space below the row
     ui.add_space(ROW_MARGIN);
 }
 

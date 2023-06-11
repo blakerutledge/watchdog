@@ -1,129 +1,80 @@
 use crate::app::ui::*;
+use std::collections::HashMap;
 
-const ASSET_ICON_CONFIG: &[u8] = include_bytes!("../../../assets/icons/icon-config.png");
-const ASSET_ICON_APPS: &[u8] = include_bytes!("../../../assets/icons/icon-apps.png");
-const ASSET_ICON_STATS: &[u8] = include_bytes!("../../../assets/icons/icon-stats.png");
-const ASSET_ICON_EXIT: &[u8] = include_bytes!("../../../assets/icons/icon-exit.png");
-
+// Logo
 const ASSET_ICON_LOGO: &[u8] = include_bytes!("../../../assets/icons/icon-logo.png");
 
+// Window Buttons
 const ASSET_ICON_MIN: &[u8] = include_bytes!("../../../assets/icons/icon-min.png");
 const ASSET_ICON_MAX: &[u8] = include_bytes!("../../../assets/icons/icon-max.png");
 const ASSET_ICON_UNMAX: &[u8] = include_bytes!("../../../assets/icons/icon-unmax.png");
 const ASSET_ICON_CLOSE: &[u8] = include_bytes!("../../../assets/icons/icon-close.png");
 
-const ASSET_FONT_MONOLISA: &[u8] = include_bytes!("../../../assets/fonts/monolisa/MonoLisa.otf");
+// Nav Bar
+const ASSET_ICON_CONFIG: &[u8] = include_bytes!("../../../assets/icons/icon-config.png");
+const ASSET_ICON_APPS: &[u8] = include_bytes!("../../../assets/icons/icon-apps.png");
+const ASSET_ICON_STATS: &[u8] = include_bytes!("../../../assets/icons/icon-stats.png");
+const ASSET_ICON_EXIT: &[u8] = include_bytes!("../../../assets/icons/icon-exit.png");
 
-pub fn load(state: &mut State, context: &egui::Context) {
-    // load any missing images
-    if !state.ui.textures.contains_key("icon_config") {
-        create_tex(ASSET_ICON_CONFIG, "icon_config", context, state);
-        println!("created icon_config texture");
-    }
+// Config section
+const ASSET_ICON_LOAD: &[u8] = include_bytes!("../../../assets/icons/icon-load.png");
+const ASSET_ICON_SAVE: &[u8] = include_bytes!("../../../assets/icons/icon-save.png");
+const ASSET_ICON_RESET: &[u8] = include_bytes!("../../../assets/icons/icon-reset.png");
+const ASSET_ICON_CREATE: &[u8] = include_bytes!("../../../assets/icons/icon-create.png");
+const ASSET_ICON_DELETE: &[u8] = include_bytes!("../../../assets/icons/icon-delete.png");
 
-    if !state.ui.textures.contains_key("icon_apps") {
-        create_tex(ASSET_ICON_APPS, "icon_apps", context, state);
-        println!("created icon_apps texture");
-    }
+//
+// add more here...
+//
 
-    if !state.ui.textures.contains_key("icon_stats") {
-        create_tex(ASSET_ICON_STATS, "icon_stats", context, state);
-        println!("created icon_stats texture");
-    }
-
-    if !state.ui.textures.contains_key("icon_exit") {
-        create_tex(ASSET_ICON_EXIT, "icon_exit", context, state);
-        println!("created icon_exit texture");
-    };
-
-    if !state.ui.textures.contains_key("icon_logo") {
-        create_tex(ASSET_ICON_LOGO, "icon_logo", context, state);
-        println!("created logo texture");
-    }
-
-    if !state.ui.textures.contains_key("icon_min") {
-        create_tex(ASSET_ICON_MIN, "icon_min", context, state);
-        println!("created icon_min texture");
-    }
-
-    if !state.ui.textures.contains_key("icon_max") {
-        create_tex(ASSET_ICON_MAX, "icon_max", context, state);
-        println!("created icon_max texture");
-    }
-
-    if !state.ui.textures.contains_key("icon_unmax") {
-        create_tex(ASSET_ICON_UNMAX, "icon_unmax", context, state);
-        println!("created icon_unmax texture");
-    }
-
-    if !state.ui.textures.contains_key("icon_close") {
-        create_tex(ASSET_ICON_CLOSE, "icon_close", context, state);
-        println!("created icon_close texture");
-    }
-    /*
-       add more here
-    */
-
-    // load fonts
-    if !state.ui.custom_fonts {
-        // init font
-        let mut fonts = egui::FontDefinitions::default();
-
-        // Install my own font (maybe supporting non-latin characters).
-        // .ttf and .otf files supported.
-        fonts.font_data.insert(
-            "monolisa".to_owned(),
-            egui::FontData::from_static(ASSET_FONT_MONOLISA),
-        );
-
-        // Put my font first (highest priority) forboth monospace and proportional text:
-        fonts
-            .families
-            .entry(egui::FontFamily::Proportional)
-            .or_default()
-            .insert(0, "monolisa".to_owned());
-
-        fonts
-            .families
-            .entry(egui::FontFamily::Monospace)
-            .or_default()
-            .insert(0, "monolisa".to_owned());
-
-        // Tell egui to use these fonts:
-        context.set_fonts(fonts);
-
-        use egui::FontFamily::Monospace;
-        use egui::{FontId, TextStyle};
-
-        let mut style = (*context.style()).clone();
-        style.text_styles = [
-            (
-                TextStyle::Name("Title".into()),
-                FontId::new(14.0, Monospace),
-            ),
-            (
-                TextStyle::Name("Subheading".into()),
-                FontId::new(16.0, Monospace),
-            ),
-            (
-                TextStyle::Name("TextButton".into()),
-                FontId::new(14.0, Monospace),
-            ),
-            (TextStyle::Heading, FontId::new(20.0, Monospace)),
-            (TextStyle::Body, FontId::new(12.0, Monospace)),
-            (TextStyle::Monospace, FontId::new(12.0, Monospace)),
-            (TextStyle::Button, FontId::new(12.0, Monospace)),
-            (TextStyle::Small, FontId::new(8.0, Monospace)),
-        ]
-        .into();
-        context.set_style(style);
-
-        // set flag to true so we only do this once
-        state.ui.custom_fonts = true
-    }
+pub fn init(state: &mut State) {
+    // Create map of keys to binary assets
+    state.ui.asset_map = HashMap::from([
+        // Logo
+        ("icon_logo", ASSET_ICON_LOGO),
+        // Window Buttons
+        ("icon_min", ASSET_ICON_MIN),
+        ("icon_max", ASSET_ICON_MAX),
+        ("icon_unmax", ASSET_ICON_UNMAX),
+        ("icon_close", ASSET_ICON_CLOSE),
+        // Nav Bar
+        ("icon_config", ASSET_ICON_CONFIG),
+        ("icon_apps", ASSET_ICON_APPS),
+        ("icon_stats", ASSET_ICON_STATS),
+        ("icon_exit", ASSET_ICON_EXIT),
+        // Config
+        ("icon_load", ASSET_ICON_LOAD),
+        ("icon_save", ASSET_ICON_SAVE),
+        ("icon_reset", ASSET_ICON_RESET),
+        ("icon_create", ASSET_ICON_CREATE),
+        ("icon_delete", ASSET_ICON_DELETE),
+        //
+        // ... and here
+        //
+    ]);
 }
 
-fn create_tex(image_data: &[u8], slug: &str, context: &egui::Context, state: &mut State) {
+pub fn load(state: &mut State, context: &egui::Context) {
+    //
+    // On the first frame, load each image binary into a texture for egui to use
+    //
+    if !state.ui.loaded_textures {
+        for (slug, data) in state.ui.asset_map.iter() {
+            if !state.ui.textures.contains_key(slug) {
+                create_tex(data, slug, context, &mut state.ui.textures);
+                println!("created {slug} texture");
+            }
+        }
+    }
+    state.ui.loaded_textures = true;
+}
+
+fn create_tex(
+    image_data: &[u8],
+    slug: &'static str,
+    context: &egui::Context,
+    textures: &mut HashMap<&str, (Vec2, egui::TextureHandle)>,
+) {
     let image = image::load_from_memory(image_data)
         .expect(format!("Failed to load image {}", slug).as_str());
     let size = [image.width() as _, image.height() as _];
@@ -135,5 +86,5 @@ fn create_tex(image_data: &[u8], slug: &str, context: &egui::Context, state: &mu
     let raw_size = egui::Vec2::new(size[0] as f32, size[1] as f32);
     let tex = context.load_texture(slug, i, Default::default());
 
-    state.ui.textures.insert(slug.to_string(), (raw_size, tex));
+    textures.insert(slug, (raw_size, tex));
 }
