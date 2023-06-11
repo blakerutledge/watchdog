@@ -75,7 +75,9 @@ fn update(
 ) {
     // Set to Poll instead of Wait on Windows so we can actually
     // capture the tray left click event when it happens
-    *control_flow = winit::event_loop::ControlFlow::Poll;
+    *control_flow = winit::event_loop::ControlFlow::WaitUntil(
+        std::time::Instant::now() + std::time::Duration::from_millis(14),
+    );
 
     // Renderer handles a few various winit events outside of redrawing
     renderer::update(event, renderer);
