@@ -82,31 +82,87 @@ impl Store {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct WatchedApp {
-    pub name: String,
-    pub run: String,
-    pub osc_in_port: String,
-    pub osc_out_port: String,
-    pub heartbeat_channel: String,
-    pub heartbeat_interval: String,
-    pub heartbeat_timeout: String,
-    pub startup_timeout: String,
-    pub restart_delay: String,
+    pub name: ConfigData,
+    pub run: ConfigData,
+    pub osc_in_port: ConfigData,
+    pub osc_out_port: ConfigData,
+    pub heartbeat_channel: ConfigData,
+    pub heartbeat_interval: ConfigData,
+    pub heartbeat_timeout: ConfigData,
+    pub startup_timeout: ConfigData,
+    pub restart_delay: ConfigData,
 }
 
 impl WatchedApp {
     pub fn default() -> Self {
         Self {
-            name: "demo".to_string(),
-            run: "demo.exe".to_string(),
-            osc_in_port: "1234".to_string(),
-            osc_out_port: "1235".to_string(),
-            heartbeat_channel: "/heart".to_string(),
-            heartbeat_interval: "1".to_string(),
-            heartbeat_timeout: "5".to_string(),
-            startup_timeout: "30".to_string(),
-            restart_delay: "30".to_string(),
+            name: ConfigData::new_text("demo"),
+            run: ConfigData::new_text("demo.exe"),
+            osc_in_port: ConfigData::new_port(1234),
+            osc_out_port: ConfigData::new_port(1235),
+            heartbeat_channel: ConfigData::new_text("/heart"),
+            heartbeat_interval: ConfigData::new_seconds(1),
+            heartbeat_timeout: ConfigData::new_seconds(5),
+            startup_timeout: ConfigData::new_seconds(30),
+            restart_delay: ConfigData::new_seconds(30),
         }
     }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ConfigData {
+    pub str: String,
+    pub val: ConfigDataType,
+}
+
+impl ConfigData {
+    pub fn new_text(val: &str) -> Self {
+        ConfigData {
+            str: val.to_string(),
+            val: ConfigDataType::Text(val.to_string()),
+        }
+    }
+
+    pub fn new_port(val: usize) -> Self {
+        ConfigData {
+            str: val.to_string(),
+            val: ConfigDataType::Port(val),
+        }
+    }
+
+    pub fn new_seconds(val: usize) -> Self {
+        ConfigData {
+            str: val.to_string(),
+            val: ConfigDataType::Seconds(val),
+        }
+    }
+
+    // Validate
+    pub fn validate(&self) -> bool {
+        let valid = match &self.val {
+            Text => {
+                // TO DO actually validate
+                true
+            }
+            Port => {
+                // TO DO actually validate
+                true
+            }
+            Seconds => {
+                // TO DO actually validate
+                true
+            }
+        };
+
+        valid
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub enum ConfigDataType {
+    Text(String),
+    Port(usize),
+    Seconds(usize),
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -190,12 +246,6 @@ pub struct Email {
     non_responsive: Vec<String>,
     email_limit_per_day: u32,
 }
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Network {
-    client_listen_port: u32,
-    client_response_port: u32,
-}
 */
 
 pub fn init(state: &mut State) -> Config {
@@ -242,11 +292,6 @@ pub fn init(state: &mut State) -> Config {
         startup_failure: vec![EmailAddress::from_str("blake@blakerutledge.com").unwrap()],
         non_responsive: vec![EmailAddress::from_str("blake@blakerutledge.com").unwrap()],
         email_limit_per_day: 3,
-    };
-
-    let network = Network {
-        client_listen_port: 1235,
-        client_response_port: 1234,
     };
     */
 }
@@ -314,6 +359,7 @@ pub fn replace_from_file(file: PathBuf, state: &mut State, config: &mut Config) 
 }
 
 /*
+// Reset current JSON file to all defaults
 pub fn reset_config(state: &mut State, config: &mut Config) {
     let c = Config::default();
     *config = c;
@@ -321,6 +367,7 @@ pub fn reset_config(state: &mut State, config: &mut Config) {
 }
 */
 
+// Reset to default JSON filepath, and reset that to all defaults
 pub fn reinit_config(state: &mut State, config: &mut Config) {
     // Update path, update store, write
     state.json.filepath = Store::default_config_filepath();

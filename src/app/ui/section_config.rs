@@ -357,7 +357,9 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
         ui,
         state,
         "Name",
-        &mut config.watched_apps[state.ui.config_watched_app_index].name,
+        &mut config.watched_apps[state.ui.config_watched_app_index]
+            .name
+            .str,
         true,
     );
 
@@ -365,7 +367,9 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
         ui,
         state,
         "Run",
-        &mut config.watched_apps[state.ui.config_watched_app_index].run,
+        &mut config.watched_apps[state.ui.config_watched_app_index]
+            .run
+            .str,
         true,
     );
 
@@ -373,7 +377,9 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
         ui,
         state,
         "OSC Port In (Client)",
-        &mut config.watched_apps[state.ui.config_watched_app_index].osc_in_port,
+        &mut config.watched_apps[state.ui.config_watched_app_index]
+            .osc_in_port
+            .str,
         true,
     );
 
@@ -381,7 +387,9 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
         ui,
         state,
         "OSC Port Out (Client)",
-        &mut config.watched_apps[state.ui.config_watched_app_index].osc_out_port,
+        &mut config.watched_apps[state.ui.config_watched_app_index]
+            .osc_out_port
+            .str,
         true,
     );
 
@@ -389,7 +397,9 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
         ui,
         state,
         "Hearbeat OSC Channel",
-        &mut config.watched_apps[state.ui.config_watched_app_index].heartbeat_channel,
+        &mut config.watched_apps[state.ui.config_watched_app_index]
+            .heartbeat_channel
+            .str,
         true,
     );
 
@@ -397,7 +407,9 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
         ui,
         state,
         "Heartbeat Interval (sec)",
-        &mut config.watched_apps[state.ui.config_watched_app_index].heartbeat_interval,
+        &mut config.watched_apps[state.ui.config_watched_app_index]
+            .heartbeat_interval
+            .str,
         true,
     );
 
@@ -405,7 +417,9 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
         ui,
         state,
         "Heartbeat Timeout (sec)",
-        &mut config.watched_apps[state.ui.config_watched_app_index].heartbeat_timeout,
+        &mut config.watched_apps[state.ui.config_watched_app_index]
+            .heartbeat_timeout
+            .str,
         true,
     );
 
@@ -413,7 +427,9 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
         ui,
         state,
         "Startup Timeout (sec)",
-        &mut config.watched_apps[state.ui.config_watched_app_index].startup_timeout,
+        &mut config.watched_apps[state.ui.config_watched_app_index]
+            .startup_timeout
+            .str,
         true,
     );
 
@@ -421,7 +437,9 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
         ui,
         state,
         "Restart Delay (sec)",
-        &mut config.watched_apps[state.ui.config_watched_app_index].restart_delay,
+        &mut config.watched_apps[state.ui.config_watched_app_index]
+            .restart_delay
+            .str,
         true,
     );
 
@@ -430,21 +448,27 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
         ui,
         state,
         "Restart Delay (sec)",
-        &mut config.watched_apps[state.ui.config_watched_app_index].restart_delay,
+        &mut config.watched_apps[state.ui.config_watched_app_index]
+            .restart_delay
+            .str,
         true,
     );
     components::draw_row(
         ui,
         state,
         "Restart Delay (sec)",
-        &mut config.watched_apps[state.ui.config_watched_app_index].restart_delay,
+        &mut config.watched_apps[state.ui.config_watched_app_index]
+            .restart_delay
+            .str,
         true,
     );
     components::draw_row(
         ui,
         state,
         "Restart Delay (sec)",
-        &mut config.watched_apps[state.ui.config_watched_app_index].restart_delay,
+        &mut config.watched_apps[state.ui.config_watched_app_index]
+            .restart_delay
+            .str,
         true,
     );
 
