@@ -6,6 +6,7 @@ const COLUMN_WIDTH: f32 = 64.0;
 const ICON_SIZE: f32 = 44.0;
 const CORNER_ROUND: f32 = 4.0;
 const MARGIN: f32 = 10.0;
+const STATUS_DOT_RADIUS: f32 = 3.0;
 
 pub fn draw(context: &egui::Context, state: &mut State) {
     egui::SidePanel::left("nav_bar")
@@ -15,95 +16,34 @@ pub fn draw(context: &egui::Context, state: &mut State) {
         .show_separator_line(false)
         .show(context, |ui| {
             ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
-                // Get Icon TextureHandles
-                let icon_config = state.ui.textures.get("icon_config").unwrap();
-                let icon_apps = state.ui.textures.get("icon_apps").unwrap();
-                let icon_stats = state.ui.textures.get("icon_stats").unwrap();
-                let icon_exit = state.ui.textures.get("icon_exit").unwrap();
-
-                let icon_w2 = Vec2::new(ICON_SIZE, ICON_SIZE);
-
-                let theme = ui.visuals_mut();
-
-                // baseline
-                theme.widgets.inactive.weak_bg_fill = COLOR_TRANSPARENT;
-
-                // clicking
-                theme.widgets.active.weak_bg_fill = COLOR_DARKER_GREY;
-                theme.widgets.active.bg_stroke = egui::Stroke {
-                    width: 0.0,
-                    color: COLOR_TRANSPARENT,
-                };
-                theme.widgets.active.rounding = egui::Rounding {
-                    nw: CORNER_ROUND,
-                    sw: CORNER_ROUND,
-                    se: CORNER_ROUND,
-                    ne: CORNER_ROUND,
-                };
-
-                // hovering
-                theme.widgets.hovered.weak_bg_fill = COLOR_DARK_GREY;
-                theme.widgets.hovered.bg_stroke = egui::Stroke {
-                    width: 0.0,
-                    color: COLOR_TRANSPARENT,
-                };
-                theme.widgets.hovered.rounding = egui::Rounding {
-                    nw: CORNER_ROUND,
-                    sw: CORNER_ROUND,
-                    se: CORNER_ROUND,
-                    ne: CORNER_ROUND,
-                };
-
-                // disabled
-                theme.widgets.noninteractive.weak_bg_fill = COLOR_TRANSPARENT;
-
-                let style = ui.style_mut();
-                style.spacing.button_padding = egui::Vec2::new(0.0, 0.0);
-                style.spacing.item_spacing = egui::Vec2::new(0.0, MARGIN - 1.0); // ???
-
-                // let r = ui.add(egui::ImageButton::new(&icon_config.1, icon_w2));
-                let r = draw_nav_button(
-                    ui,
-                    &icon_config.1,
-                    state.ui.active_tab == TabState::Config,
-                    true,
-                );
-                if r.clicked() {
-                    state.ui.active_tab = TabState::Config;
-                }
-                r.on_hover_cursor(egui::CursorIcon::PointingHand);
-
                 //
-                //
-                // Apps
-                let r = draw_nav_button(
-                    ui,
-                    &icon_apps.1,
-                    state.ui.active_tab == TabState::Apps,
-                    false,
-                );
-                if r.clicked() {
-                    state.ui.active_tab = TabState::Apps;
-                }
-                r.on_hover_cursor(egui::CursorIcon::PointingHand);
+                // Reset the default Egui style
+                style_imagebuttons(ui);
 
-                // Stats
-                let r = draw_nav_button(
-                    ui,
-                    &icon_stats.1,
-                    state.ui.active_tab == TabState::Stats,
-                    false,
-                );
-                if r.clicked() {
-                    state.ui.active_tab = TabState::Stats;
-                }
-                r.on_hover_cursor(egui::CursorIcon::PointingHand);
+                // Draw Config Button
+                let config_valid = true; // TO DO: make real valid / invalid status
+                draw_nav_button(ui, state, TabState::Config, config_valid);
+
+                // Draw Apps Button
+                let apps_valid = false; // TO DO: make real valid / invalid status
+                draw_nav_button(ui, state, TabState::Apps, apps_valid);
+
+                // Draw Stats Button
+                let stats_valid = false; // TO DO: make real valid / invalid status
+                draw_nav_button(ui, state, TabState::Stats, stats_valid);
 
                 // Float to bottom
                 ui.add_space(ui.available_height() - ICON_SIZE - MARGIN);
 
-                // Exit
-                let r = ui.add(egui::ImageButton::new(&icon_exit.1, icon_w2));
+                // Draw Exit Button
+                // This one does not actually have an associated tab in TabState,
+                // so we cant draw it with the helper funtion
+                ui.visuals_mut().widgets.inactive.weak_bg_fill = COLOR_TRANSPARENT;
+                let icon_exit = state.ui.textures.get("icon_exit").unwrap();
+                let r = ui.add(egui::ImageButton::new(
+                    &icon_exit.1,
+                    Vec2::new(ICON_SIZE, ICON_SIZE),
+                ));
                 if r.clicked() {
                     if !state.ui.exit_tooltip_clickout && !state.ui.show_exit_tooltip {
                         state.ui.show_exit_tooltip = true;
@@ -114,53 +54,119 @@ pub fn draw(context: &egui::Context, state: &mut State) {
         });
 }
 
-fn draw_nav_button(
-    ui: &mut egui::Ui,
-    texture_id: &egui::TextureHandle,
-    is_selected: bool,
-    is_healthy: bool,
-) -> egui::Response {
-    if is_selected {
-        ui.visuals_mut().widgets.inactive.weak_bg_fill = COLOR_DARK_GREY;
-    } else {
-        ui.visuals_mut().widgets.inactive.weak_bg_fill = COLOR_TRANSPARENT;
-    }
+// Helper to draw a nav button, complete with styles for various states and interactivity
+fn draw_nav_button(ui: &mut egui::Ui, state: &mut State, tab_state: TabState, is_healthy: bool) {
     //
-    // Start with the Image Button
+    // Flag if this is the button for the currently active tab
+    let is_selected = state.ui.active_tab == tab_state;
+
+    // Set background color
+    ui.visuals_mut().widgets.inactive.weak_bg_fill = match is_selected {
+        true => COLOR_DARK_GREY,
+        false => COLOR_TRANSPARENT,
+    };
+
+    // Store color of left side vertical bar
+    let bar_color = match is_selected {
+        true => COLOR_YELLOW,
+        false => COLOR_TRANSPARENT,
+    };
+
+    // Store color of top right status dot
+    let dot_color = match is_healthy {
+        true => COLOR_GREEN,
+        false => COLOR_RED,
+    };
+
+    // Store the texture slug for lookup
+    let texture_slug = match tab_state {
+        TabState::Config => "icon_config",
+        TabState::Apps => "icon_apps",
+        TabState::Stats => "icon_stats",
+    };
+
+    // Lookup the texture handle with the slug
+    let texture_handle = state.ui.textures.get(texture_slug).unwrap();
+
+    // Draw the ImageButton
     let r = ui.add(egui::ImageButton::new(
-        texture_id,
+        &texture_handle.1,
         Vec2::new(ICON_SIZE, ICON_SIZE),
     ));
 
     // Then draw the left hand bar
     let mut bar = r.rect.clone();
-    bar.set_width(3.0);
+    bar.set_width(STATUS_DOT_RADIUS);
     ui.painter_at(bar).rect_filled(
         bar,
         egui::Rounding {
-            nw: 3.0,
-            sw: 3.0,
+            nw: STATUS_DOT_RADIUS,
+            sw: STATUS_DOT_RADIUS,
             ne: 0.0,
             se: 0.0,
         },
-        if is_selected {
-            COLOR_YELLOW
-        } else {
-            COLOR_TRANSPARENT
-        },
+        bar_color,
     );
 
     // Then draw the status circle
     let mut circ = egui::Rect {
         min: Pos2::new(0.0, 0.0),
-        max: Pos2::new(6.0, 6.0),
+        max: Pos2::new(STATUS_DOT_RADIUS * 2.0, STATUS_DOT_RADIUS * 2.0),
     };
-    circ.set_center(Pos2::new(r.rect.right() - 6.0, r.rect.top() + 6.0));
-    ui.painter_at(circ).circle_filled(
-        circ.center(),
-        3.0,
-        if is_healthy { COLOR_GREEN } else { COLOR_RED },
-    );
+    circ.set_center(Pos2::new(
+        r.rect.right() - STATUS_DOT_RADIUS * 2.0,
+        r.rect.top() + STATUS_DOT_RADIUS * 2.0,
+    ));
+    ui.painter_at(circ)
+        .circle_filled(circ.center(), STATUS_DOT_RADIUS, dot_color);
 
-    r
+    // Click Interactivity, set the active tab to this type
+    if r.clicked() {
+        state.ui.active_tab = tab_state;
+    }
+
+    // Hover cursor icon
+    r.on_hover_cursor(egui::CursorIcon::PointingHand);
+}
+
+//
+// Reset the default Egui ImageButton style to something more manageable
+fn style_imagebuttons(ui: &mut egui::Ui) {
+    let theme = ui.visuals_mut();
+
+    // baseline
+    theme.widgets.inactive.weak_bg_fill = COLOR_TRANSPARENT;
+
+    // clicking
+    theme.widgets.active.weak_bg_fill = COLOR_DARKER_GREY;
+    theme.widgets.active.bg_stroke = egui::Stroke {
+        width: 0.0,
+        color: COLOR_TRANSPARENT,
+    };
+    theme.widgets.active.rounding = egui::Rounding {
+        nw: CORNER_ROUND,
+        sw: CORNER_ROUND,
+        se: CORNER_ROUND,
+        ne: CORNER_ROUND,
+    };
+
+    // hovering
+    theme.widgets.hovered.weak_bg_fill = COLOR_DARK_GREY;
+    theme.widgets.hovered.bg_stroke = egui::Stroke {
+        width: 0.0,
+        color: COLOR_TRANSPARENT,
+    };
+    theme.widgets.hovered.rounding = egui::Rounding {
+        nw: CORNER_ROUND,
+        sw: CORNER_ROUND,
+        se: CORNER_ROUND,
+        ne: CORNER_ROUND,
+    };
+
+    // disabled
+    theme.widgets.noninteractive.weak_bg_fill = COLOR_TRANSPARENT;
+
+    let style = ui.style_mut();
+    style.spacing.button_padding = egui::Vec2::new(0.0, 0.0);
+    style.spacing.item_spacing = egui::Vec2::new(0.0, MARGIN - 1.0); // ???
 }
