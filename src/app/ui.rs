@@ -39,6 +39,7 @@ pub const COLOR_DARKER_GREY: Color32 = Color32::from_rgb(22, 22, 22);
 pub const COLOR_DARK_RED: Color32 = Color32::from_rgb(238, 58, 23);
 pub const COLOR_RED: Color32 = Color32::from_rgb(251, 81, 48);
 pub const COLOR_YELLOW: Color32 = Color32::from_rgb(234, 162, 0);
+pub const COLOR_GREEN: Color32 = Color32::from_rgb(44, 221, 126);
 // pub const COLOR_WHITE_TINT: Color32 = Color32::from_rgba_unmultiplied(255, 255, 255, 20);
 
 // Init is called once, and returns the reference to the closure that is the primary draw function,

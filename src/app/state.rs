@@ -69,6 +69,7 @@ pub struct Json {
     pub dirty: bool,
 }
 
+#[derive(PartialEq)]
 pub enum TabState {
     Config,
     Apps,

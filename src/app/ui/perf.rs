@@ -1,7 +1,7 @@
 use crate::app::ui::*;
 
 // TEMP perf overlay
-const SHOW_HOST_DEV: bool = true;
+const SHOW_HOST_DEV: bool = false;
 
 //
 // Show debug statistics relevant to the watchdog host application performance
