@@ -162,6 +162,7 @@ fn apply(
     // Config has been edited
     if state.actions.config_edited {
         state.actions.config_edited = false;
+        config.validate_all(state);
         config.write(&state.json.filepath);
     }
 }

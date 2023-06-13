@@ -113,13 +113,22 @@ impl WatchedApp {
 pub struct ConfigData {
     pub str: String,
     pub val: ConfigDataType,
+    pub dirty: bool,
+    pub valid: bool,
+    pub error: String,
 }
 
 impl ConfigData {
+    //
+    // Builders
+    //
     pub fn new_text(val: &str) -> Self {
         ConfigData {
             str: val.to_string(),
             val: ConfigDataType::Text(val.to_string()),
+            dirty: false,
+            valid: false,
+            error: String::new(),
         }
     }
 
@@ -127,6 +136,9 @@ impl ConfigData {
         ConfigData {
             str: val.to_string(),
             val: ConfigDataType::Port(val),
+            dirty: false,
+            valid: false,
+            error: String::new(),
         }
     }
 
@@ -134,50 +146,121 @@ impl ConfigData {
         ConfigData {
             str: val.to_string(),
             val: ConfigDataType::Seconds(val),
+            dirty: false,
+            valid: false,
+            error: String::new(),
         }
     }
 
     // Validate
-    pub fn validate(&self) -> bool {
-        let valid = match &self.val {
-            Text => {
-                // TO DO actually validate
-                true
-            }
-            Port => {
-                // TO DO actually validate
-                true
-            }
-            Seconds => {
-                // TO DO actually validate
-                true
-            }
-        };
+    pub fn validate(&mut self) {
+        match self.val {
+            ConfigDataType::Text(ref mut data) => {
+                // move the UI string into the data type
+                *data = self.str.to_string();
 
-        valid
+                self.valid = true;
+                self.dirty = false;
+            }
+            ConfigDataType::Port(ref mut data) => {
+                // move the UI string into the data type
+                let valid_int: bool;
+                let port: usize = match self.str.trim().parse() {
+                    Ok(num) => {
+                        valid_int = true;
+                        num
+                    }
+                    Err(_) => {
+                        valid_int = false;
+                        0
+                    }
+                };
+
+                // valid range
+                let in_range = 1024 <= port && port <= 9999;
+
+                // TO DO: make sure port is not used by any other config
+                let available = true;
+
+                // SET validity
+                self.valid = valid_int && in_range && available;
+
+                // ADD errors for ui
+                // self.errors.clear();
+                if !valid_int {
+                    self.error =
+                        "Port must be a positive integer in between 1024 and 9999".to_string();
+                } else if !in_range {
+                    self.error = "Port must be in between 1024 and 9999 but this error is still super long and i think might even flow onto three whole lines. Wow!".to_string();
+                } else if !available {
+                    self.error = "Port is already in use".to_string();
+                } else {
+                    self.error.clear();
+                }
+
+                if self.valid {
+                    // APPLY new type safe value
+                    *data = port;
+                } else {
+                    // APPLY placeholder data since Ui string is invalid
+                    *data = 0;
+                }
+
+                self.dirty = false;
+            }
+            ConfigDataType::Seconds(data) => {}
+        }
+        // if self.val == ConfigDataType::Text {}
+        // match self.val {
+        //     ConfigDataType::Text(mut data) => {
+        //         // TO DO actually validate
+        //         // can i just change it in place? dont want to create a new one?
+        //         data = self.str.to_string();
+        //         // data = self.str.to_string();
+        //         self.dirty = false;
+        //         self.valid = true;
+        //     }
+        //     ConfigDataType::Port(data) => {
+        //         // TO DO actually validate
+        //         self.valid = true;
+        //     }
+        //     ConfigDataType::Seconds(data) => {
+        //         // TO DO actually validate
+        //         self.valid = true;
+        //     }
+        // };
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub enum ConfigDataType {
     Text(String),
     Port(usize),
     Seconds(usize),
 }
 
+impl ConfigDataType {
+    pub fn to_string(&self) -> String {
+        match self {
+            ConfigDataType::Text(val) => val.to_string(),
+            ConfigDataType::Port(val) => val.to_string(),
+            ConfigDataType::Seconds(val) => val.to_string(),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct EmailClient {
     pub enabled: bool,
-    pub address: String,
-    pub password: String,
-    pub email_on_startup: String,
-    pub email_on_failure: String,
-    pub limit_per_day: String,
+    pub address: ConfigData,
+    pub password: ConfigData,
+    pub email_on_startup: ConfigData,
+    pub email_on_failure: ConfigData,
+    pub limit_per_day: ConfigData,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
-    pub hello: String,
     pub watched_apps: Vec<WatchedApp>,
     pub email_client: EmailClient,
     // email: Email,
@@ -190,15 +273,14 @@ impl Config {
     //
     fn default() -> Self {
         Self {
-            hello: "world".to_string(),
             watched_apps: vec![WatchedApp::default()],
             email_client: EmailClient {
                 enabled: false,
-                address: "example@gmail.com".to_string(),
-                password: "password1234".to_string(),
-                email_on_startup: "blake@blakerutledge.com".to_string(),
-                email_on_failure: "blake@blakerutledge.com".to_string(),
-                limit_per_day: "3".to_string(),
+                address: ConfigData::new_text("example@gmail.com"),
+                password: ConfigData::new_text("password1234"),
+                email_on_startup: ConfigData::new_text("blake@blakerutledge.com"),
+                email_on_failure: ConfigData::new_text("blake@blakerutledge.com"),
+                limit_per_day: ConfigData::new_text("3"),
             },
         }
     }
@@ -216,10 +298,35 @@ impl Config {
         c
     }
 
-    pub fn validate(&self) -> bool {
-        // TO DO make sure all fields are okay
-        return true;
+    // Compare all values and mark as dirty
+    pub fn validate_all(&mut self, state: &mut State) {
+        // Sync all components of watched apps
+        for w in self.watched_apps.iter_mut() {
+            // TODO: can we iterate over the fiels rather than explicitly here?
+            w.name.validate();
+            w.run.validate();
+            w.osc_in_port.validate();
+            w.osc_out_port.validate();
+            w.heartbeat_channel.validate();
+            w.heartbeat_interval.validate();
+            w.heartbeat_timeout.validate();
+            w.startup_timeout.validate();
+            w.restart_delay.validate();
+        }
+
+        // Sync all components of the email client config
+        // self.email_client.enabled.sync();
+        // self.email_client.address.sync();
+        // self.email_client.password.sync();
+        // self.email_client.email_on_startup.sync();
+        // self.email_client.email_on_failure.sync();
+        // self.email_client.limit_per_day.sync();
     }
+
+    // pub fn validate(&self) -> bool {
+    //     // TO DO make sure all fields are okay
+    //     return true;
+    // }
 
     // Helper to convert to JSON string
     fn to_json(&self) -> String {
@@ -228,13 +335,9 @@ impl Config {
 
     // Store any changes to the Config instance to the JSON file
     pub fn write(&self, filepath: &std::path::PathBuf) {
-        if self.validate() {
-            let data = &self.to_json();
-            fs::write(filepath, data).expect("Unable to write Watchdog Config JSON file");
-            println!("Stored default JSON config to disk");
-        } else {
-            println!("TO DO handle invalid config, did not write to json");
-        }
+        let data = &self.to_json();
+        fs::write(filepath, data).expect("Unable to write Watchdog Config JSON file");
+        println!("Stored JSON config to disk");
     }
 }
 

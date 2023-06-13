@@ -19,8 +19,136 @@ pub fn draw_row(
     ui: &mut egui::Ui,
     state: &mut State,
     label: &str,
+    prop: &mut crate::app::config::ConfigData,
+) {
+    let r = ui.horizontal(|ui| {
+        // Override some styles if the element is invalid
+        if !prop.valid {
+            let visuals = ui.visuals_mut();
+            visuals.selection.stroke = egui::Stroke {
+                width: 1.0,
+                color: COLOR_RED,
+            };
+            visuals.widgets.hovered.bg_stroke = egui::Stroke {
+                width: 1.0,
+                color: COLOR_RED,
+            };
+        }
+
+        //
+        // Label with minimum width
+        //
+        ui.allocate_ui_with_layout(
+            egui::Vec2 {
+                x: ROW_LABEL_WIDTH,
+                y: ROW_HEIGHT,
+            },
+            egui::Layout {
+                main_dir: egui::Direction::LeftToRight,
+                main_wrap: false,
+                main_align: egui::Align::LEFT,
+                main_justify: true,
+                cross_align: egui::Align::Center,
+                cross_justify: true,
+            },
+            |ui| {
+                //
+                // Draw the label
+                ui.label(egui::RichText::new(label).color(COLOR_OFFWHITE));
+
+                // Add margin between label and text entry field
+                ui.add_space(ROW_GUTTER_SPACE);
+            },
+        );
+
+        //
+        // Text entry field takes rest of available space
+        //
+        let r = ui.allocate_ui_with_layout(
+            egui::Vec2 {
+                x: ui.available_width(),
+                y: ROW_HEIGHT,
+            },
+            egui::Layout {
+                main_dir: egui::Direction::LeftToRight,
+                main_wrap: false,
+                main_align: egui::Align::LEFT,
+                main_justify: true,
+                cross_align: egui::Align::Center,
+                cross_justify: true,
+            },
+            |ui| {
+                //
+                // Draw the text entry field
+                let text_edit = egui::TextEdit::singleline(&mut prop.str)
+                    .margin(egui::Vec2::new(16.0, 0.0))
+                    .text_color(if prop.valid {
+                        COLOR_TEXT_WHITE
+                    } else {
+                        COLOR_RED
+                    })
+                    .vertical_align(egui::Align::Center)
+                    .interactive(true)
+                    .frame(true);
+                // .text_color(text_color)
+
+                // Update the state to act on any changes this frame
+                let r = ui.add(text_edit);
+                if r.changed() {
+                    state.actions.config_edited = true;
+                    prop.dirty = true;
+                };
+            },
+        );
+
+        if r.response.hovered() && !prop.error.is_empty() {
+            // r.response.rect
+            let a = egui::Area::new("error_tooltip")
+                .movable(false)
+                // .anchor(egui::Align2::RIGHT_CENTER, Vec2::new(0.0, 0.0))
+                .fixed_pos(r.response.rect.left_bottom())
+                // .constrain(constrain)
+                .pivot(egui::Align2::LEFT_TOP)
+                .interactable(false);
+
+            a.show(ui.ctx(), |ui: &mut egui::Ui| {
+                ui.add_space(ROW_MARGIN);
+
+                let (rect, _response) = ui.allocate_exact_size(
+                    Vec2::new(r.response.rect.width(), r.response.rect.height()),
+                    egui::Sense::hover(),
+                );
+
+                ui.painter_at(rect)
+                    .rect_filled(rect, 4.0, COLOR_DARKER_GREY);
+
+                ui.put(rect, |ui: &mut egui::Ui| {
+                    ui.horizontal(|ui| {
+                        ui.add_space(16.0); // same as indent for text input
+                        ui.label(egui::RichText::new(&prop.error).color(COLOR_RED));
+                        //  TO DO add stroke as well ?
+                        // TO DO make text wrap and expand
+                        // TO DO everything was red on launch?
+                    })
+                    .response
+                });
+            });
+            // a.
+        }
+    });
+
+    // Add space below the row
+    ui.add_space(ROW_MARGIN);
+}
+
+//
+// Helper for drawing a standard label and text entry field
+//
+pub fn draw_row_non_interactive(
+    ui: &mut egui::Ui,
+    state: &mut State,
+    label: &str,
     prop: &mut String,
-    interactive: bool,
 ) {
     ui.horizontal(|ui| {
         //
@@ -69,11 +197,11 @@ pub fn draw_row(
                 //
                 // Draw the text entry field
                 let text_edit = egui::TextEdit::singleline(prop)
-                    .margin(egui::Vec2::new(if interactive { 16.0 } else { 0.0 }, 0.0))
+                    .margin(egui::Vec2::new(16.0, 0.0))
                     .text_color(COLOR_TEXT_WHITE)
                     .vertical_align(egui::Align::Center)
-                    .interactive(interactive)
-                    .frame(interactive);
+                    .interactive(true)
+                    .frame(true);
 
                 // Update the state to act on any changes this frame
                 let r = ui.add(text_edit);

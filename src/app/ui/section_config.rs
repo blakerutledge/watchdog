@@ -100,12 +100,11 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
     ui.add_space(4.0);
 
     // Display filepath to current JSON config file
-    components::draw_row(
+    components::draw_row_non_interactive(
         ui,
         state,
         "JSON Filepath",
         &mut state.json.filepath.to_str().unwrap().to_string(),
-        false,
     );
 
     ui.add_space(SECTION_HEADING_MARGIN);
@@ -357,90 +356,63 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
         ui,
         state,
         "Name",
-        &mut config.watched_apps[state.ui.config_watched_app_index]
-            .name
-            .str,
-        true,
+        &mut config.watched_apps[state.ui.config_watched_app_index].name,
     );
 
     components::draw_row(
         ui,
         state,
         "Run",
-        &mut config.watched_apps[state.ui.config_watched_app_index]
-            .run
-            .str,
-        true,
+        &mut config.watched_apps[state.ui.config_watched_app_index].run,
     );
 
     components::draw_row(
         ui,
         state,
         "OSC Port In (Client)",
-        &mut config.watched_apps[state.ui.config_watched_app_index]
-            .osc_in_port
-            .str,
-        true,
+        &mut config.watched_apps[state.ui.config_watched_app_index].osc_in_port,
     );
 
     components::draw_row(
         ui,
         state,
         "OSC Port Out (Client)",
-        &mut config.watched_apps[state.ui.config_watched_app_index]
-            .osc_out_port
-            .str,
-        true,
+        &mut config.watched_apps[state.ui.config_watched_app_index].osc_out_port,
     );
 
     components::draw_row(
         ui,
         state,
         "Hearbeat OSC Channel",
-        &mut config.watched_apps[state.ui.config_watched_app_index]
-            .heartbeat_channel
-            .str,
-        true,
+        &mut config.watched_apps[state.ui.config_watched_app_index].heartbeat_channel,
     );
 
     components::draw_row(
         ui,
         state,
         "Heartbeat Interval (sec)",
-        &mut config.watched_apps[state.ui.config_watched_app_index]
-            .heartbeat_interval
-            .str,
-        true,
+        &mut config.watched_apps[state.ui.config_watched_app_index].heartbeat_interval,
     );
 
     components::draw_row(
         ui,
         state,
         "Heartbeat Timeout (sec)",
-        &mut config.watched_apps[state.ui.config_watched_app_index]
-            .heartbeat_timeout
-            .str,
-        true,
+        &mut config.watched_apps[state.ui.config_watched_app_index].heartbeat_timeout,
     );
 
     components::draw_row(
         ui,
         state,
         "Startup Timeout (sec)",
-        &mut config.watched_apps[state.ui.config_watched_app_index]
-            .startup_timeout
-            .str,
-        true,
+        &mut config.watched_apps[state.ui.config_watched_app_index].startup_timeout,
     );
 
     components::draw_row(
         ui,
         state,
         "Restart Delay (sec)",
-        &mut config.watched_apps[state.ui.config_watched_app_index]
-            .restart_delay
-            .str,
-        true,
+        &mut config.watched_apps[state.ui.config_watched_app_index].restart_delay,
     );
 
     // filler for scroll testing
@@ -448,28 +420,19 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
         ui,
         state,
         "Restart Delay (sec)",
-        &mut config.watched_apps[state.ui.config_watched_app_index]
-            .restart_delay
-            .str,
-        true,
+        &mut config.watched_apps[state.ui.config_watched_app_index].restart_delay,
     );
     components::draw_row(
         ui,
         state,
         "Restart Delay (sec)",
-        &mut config.watched_apps[state.ui.config_watched_app_index]
-            .restart_delay
-            .str,
-        true,
+        &mut config.watched_apps[state.ui.config_watched_app_index].restart_delay,
     );
     components::draw_row(
         ui,
         state,
         "Restart Delay (sec)",
-        &mut config.watched_apps[state.ui.config_watched_app_index]
-            .restart_delay
-            .str,
-        true,
+        &mut config.watched_apps[state.ui.config_watched_app_index].restart_delay,
     );
 
     components::draw_separator(ui);
@@ -508,20 +471,13 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
 
     ui.add_space(ROW_MARGIN);
 
-    components::draw_row(
-        ui,
-        state,
-        "Gmail Client",
-        &mut config.email_client.address,
-        true,
-    );
+    components::draw_row(ui, state, "Gmail Client", &mut config.email_client.address);
 
     components::draw_row(
         ui,
         state,
         "Gmail Password",
         &mut config.email_client.password,
-        true,
     );
 
     components::draw_row(
@@ -529,7 +485,6 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
         state,
         "Email on Success",
         &mut config.email_client.email_on_startup,
-        true,
     );
 
     components::draw_row(
@@ -537,7 +492,6 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
         state,
         "Email on Failure",
         &mut config.email_client.email_on_failure,
-        true,
     );
 
     components::draw_row(
@@ -545,6 +499,5 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
         state,
         "Email limit per Day",
         &mut config.email_client.limit_per_day,
-        true,
     );
 }
