@@ -82,6 +82,7 @@ impl Store {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct WatchedApp {
+    pub valid: bool,
     pub name: ConfigData,
     pub run: ConfigData,
     pub osc_in_port: ConfigData,
@@ -96,6 +97,7 @@ pub struct WatchedApp {
 impl WatchedApp {
     pub fn default() -> Self {
         Self {
+            valid: false,
             name: ConfigData::new_text("demo"),
             run: ConfigData::new_text("demo.exe"),
             osc_in_port: ConfigData::new_port(1234),
@@ -153,7 +155,7 @@ impl ConfigData {
     }
 
     // Validate
-    pub fn validate(&mut self) {
+    pub fn validate(&mut self) -> bool {
         match self.val {
             ConfigDataType::Text(ref mut data) => {
                 // move the UI string into the data type
@@ -161,6 +163,8 @@ impl ConfigData {
 
                 self.valid = true;
                 self.dirty = false;
+
+                self.valid
             }
             ConfigDataType::Port(ref mut data) => {
                 // move the UI string into the data type
@@ -179,21 +183,21 @@ impl ConfigData {
                 // valid range
                 let in_range = 1024 <= port && port <= 9999;
 
+                //
                 // TO DO: make sure port is not used by any other config
+                //
                 let available = true;
 
                 // SET validity
                 self.valid = valid_int && in_range && available;
 
                 // ADD errors for ui
-                // self.errors.clear();
                 if !valid_int {
-                    self.error =
-                        "Port must be a positive integer in between 1024 and 9999".to_string();
+                    self.error = "Port must be a valid positive integer.".to_string();
                 } else if !in_range {
-                    self.error = "Port must be in between 1024 and 9999 but this error is still super long and i think might even flow onto three whole lines. Wow!".to_string();
+                    self.error = "Port must be in between 1024 and 9999.".to_string();
                 } else if !available {
-                    self.error = "Port is already in use".to_string();
+                    self.error = "Port is already in use.".to_string();
                 } else {
                     self.error.clear();
                 }
@@ -207,28 +211,52 @@ impl ConfigData {
                 }
 
                 self.dirty = false;
+
+                self.valid
             }
-            ConfigDataType::Seconds(data) => {}
+            ConfigDataType::Seconds(ref mut data) => {
+                // move the UI string into the data type
+                let valid_int: bool;
+                let sec: usize = match self.str.trim().parse() {
+                    Ok(num) => {
+                        valid_int = true;
+                        num
+                    }
+                    Err(_) => {
+                        valid_int = false;
+                        0
+                    }
+                };
+
+                // valid range
+                let in_range = 1 <= sec && sec <= 3600;
+
+                // SET validity
+                self.valid = valid_int && in_range;
+
+                // ADD errors for ui
+                // self.errors.clear();
+                if !valid_int {
+                    self.error = "Entry must be a valid positive integer.".to_string();
+                } else if !in_range {
+                    self.error = "Entry must be in between 1 and 3600.".to_string();
+                } else {
+                    self.error.clear();
+                }
+
+                if self.valid {
+                    // APPLY new type safe value
+                    *data = sec;
+                } else {
+                    // APPLY placeholder data since Ui string is invalid
+                    *data = 0;
+                }
+
+                self.dirty = false;
+
+                self.valid
+            }
         }
-        // if self.val == ConfigDataType::Text {}
-        // match self.val {
-        //     ConfigDataType::Text(mut data) => {
-        //         // TO DO actually validate
-        //         // can i just change it in place? dont want to create a new one?
-        //         data = self.str.to_string();
-        //         // data = self.str.to_string();
-        //         self.dirty = false;
-        //         self.valid = true;
-        //     }
-        //     ConfigDataType::Port(data) => {
-        //         // TO DO actually validate
-        //         self.valid = true;
-        //     }
-        //     ConfigDataType::Seconds(data) => {
-        //         // TO DO actually validate
-        //         self.valid = true;
-        //     }
-        // };
     }
 }
 
@@ -239,19 +267,10 @@ pub enum ConfigDataType {
     Seconds(usize),
 }
 
-impl ConfigDataType {
-    pub fn to_string(&self) -> String {
-        match self {
-            ConfigDataType::Text(val) => val.to_string(),
-            ConfigDataType::Port(val) => val.to_string(),
-            ConfigDataType::Seconds(val) => val.to_string(),
-        }
-    }
-}
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct EmailClient {
     pub enabled: bool,
+    pub valid: bool,
     pub address: ConfigData,
     pub password: ConfigData,
     pub email_on_startup: ConfigData,
@@ -261,6 +280,7 @@ pub struct EmailClient {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
+    pub valid: bool,
     pub watched_apps: Vec<WatchedApp>,
     pub email_client: EmailClient,
     // email: Email,
@@ -273,9 +293,11 @@ impl Config {
     //
     fn default() -> Self {
         Self {
+            valid: false,
             watched_apps: vec![WatchedApp::default()],
             email_client: EmailClient {
                 enabled: false,
+                valid: false,
                 address: ConfigData::new_text("example@gmail.com"),
                 password: ConfigData::new_text("password1234"),
                 email_on_startup: ConfigData::new_text("blake@blakerutledge.com"),
@@ -300,33 +322,58 @@ impl Config {
 
     // Compare all values and mark as dirty
     pub fn validate_all(&mut self, state: &mut State) {
-        // Sync all components of watched apps
+        // validity for entire configuration
+        let mut valid = true;
+
+        //
+        // Validate each of the watched app configuration properties
         for w in self.watched_apps.iter_mut() {
-            // TODO: can we iterate over the fiels rather than explicitly here?
-            w.name.validate();
-            w.run.validate();
-            w.osc_in_port.validate();
-            w.osc_out_port.validate();
-            w.heartbeat_channel.validate();
-            w.heartbeat_interval.validate();
-            w.heartbeat_timeout.validate();
-            w.startup_timeout.validate();
-            w.restart_delay.validate();
+            let mut v = true;
+            v = v && w.name.validate();
+            v = v && w.run.validate();
+            v = v && w.osc_in_port.validate();
+            v = v && w.osc_out_port.validate();
+            v = v && w.heartbeat_channel.validate();
+            v = v && w.heartbeat_interval.validate();
+            v = v && w.heartbeat_timeout.validate();
+            v = v && w.startup_timeout.validate();
+            v = v && w.restart_delay.validate();
+            //
+            // Add any props for Watched App validity here
+            //
+
+            // Validity for individual watched app
+            w.valid = v;
+
+            // Validity for entire config
+            valid = valid && v;
         }
 
+        //
         // Sync all components of the email client config
-        // self.email_client.enabled.sync();
-        // self.email_client.address.sync();
-        // self.email_client.password.sync();
-        // self.email_client.email_on_startup.sync();
-        // self.email_client.email_on_failure.sync();
-        // self.email_client.limit_per_day.sync();
-    }
+        if self.email_client.enabled {
+            let mut v = true;
+            v = v && self.email_client.address.validate();
+            v = v && self.email_client.password.validate();
+            v = v && self.email_client.email_on_startup.validate();
+            v = v && self.email_client.email_on_failure.validate();
+            v = v && self.email_client.limit_per_day.validate();
+            //
+            // Add any props for Email Client validity here
+            //
+            self.email_client.valid = v;
+        } else {
+            self.email_client.valid = true;
+        }
 
-    // pub fn validate(&self) -> bool {
-    //     // TO DO make sure all fields are okay
-    //     return true;
-    // }
+        // Validity for entire config
+        valid = valid && self.email_client.valid;
+
+        //
+        // Add validity for any other sections here
+        //
+        self.valid = valid;
+    }
 
     // Helper to convert to JSON string
     fn to_json(&self) -> String {
@@ -337,7 +384,6 @@ impl Config {
     pub fn write(&self, filepath: &std::path::PathBuf) {
         let data = &self.to_json();
         fs::write(filepath, data).expect("Unable to write Watchdog Config JSON file");
-        println!("Stored JSON config to disk");
     }
 }
 
@@ -359,7 +405,9 @@ pub fn init(state: &mut State) -> Config {
 
     let c = if !state.json.filepath.exists() {
         // Initialize Config instance brand new
-        let c = Config::default();
+        let mut c = Config::default();
+
+        c.validate_all(state);
 
         // Write to disk
         c.write(&state.json.filepath);
@@ -369,7 +417,7 @@ pub fn init(state: &mut State) -> Config {
         // Initialize from existing file
         let c = Config::parse(&state.json.filepath);
 
-        // Invalid json file, reset the store to defaults
+        // Invalid json file to deserialize, reset the store to defaults
         if c.is_err() {
             println!("Error parsing the specified config Json file");
 
@@ -378,12 +426,18 @@ pub fn init(state: &mut State) -> Config {
             state.json.store.write(&state.json.filepath);
 
             // Load default config
-            let c = Config::default();
+            let mut c = Config::default();
+
+            c.validate_all(state);
+
             c.write(&state.json.filepath);
 
             c
         } else {
-            c.unwrap()
+            let mut c = c.unwrap();
+            c.validate_all(state);
+
+            c
         }
     };
 
@@ -458,6 +512,7 @@ pub fn replace_from_file(file: PathBuf, state: &mut State, config: &mut Config) 
 
         // Replace config instance
         *config = c.unwrap();
+        config.validate_all(state);
     }
 }
 
@@ -482,5 +537,6 @@ pub fn reinit_config(state: &mut State, config: &mut Config) {
     // Reset config
     let c = Config::default();
     *config = c;
+    config.validate_all(state);
     config.write(&state.json.filepath);
 }

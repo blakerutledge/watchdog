@@ -30,6 +30,7 @@ pub const COLOR_TRANSPARENT: Color32 = Color32::TRANSPARENT;
 pub const COLOR_WHITE: Color32 = Color32::WHITE;
 // pub const COLOR_BLACK: Color32 = Color32::BLACK;
 pub const COLOR_TEXT_WHITE: Color32 = Color32::from_rgb(238, 238, 238);
+// pub const COLOR_TEXT_RED: Color32 = Color32::from_rgb(251, 203, 194);
 pub const COLOR_OFFWHITE: Color32 = Color32::from_rgb(163, 163, 163);
 pub const COLOR_GRAY_TINT: Color32 = Color32::from_rgb(80, 80, 80);
 pub const COLOR_LIGHT_GREY: Color32 = Color32::from_rgb(63, 63, 63);
@@ -77,7 +78,7 @@ pub fn init(
             exit::draw(context, state);
 
             // Draw the left side vertical navigation bar, with tabs for each section of the app
-            nav_bar::draw(context, state);
+            nav_bar::draw(context, state, config);
 
             // Draw performance debug overlay
             perf::draw(context, state);

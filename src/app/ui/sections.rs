@@ -72,21 +72,26 @@ pub fn draw(context: &egui::Context, state: &mut State, config: &mut Config) {
                                     bottom: 20.0,
                                     right: 20.0,
                                 })
-                                //
-                                // Draw one section at a time depending on which is selected
-                                .show(ui, |ui| match state.ui.active_tab {
-                                    TabState::Config => {
-                                        // Draw the Config section
-                                        section_config::draw(ui, state, config)
+                                .show(ui, |ui| {
+                                    //
+                                    // Draw one section at a time depending on which is selected
+                                    match state.ui.active_tab {
+                                        TabState::Config => {
+                                            // Draw the Config section
+                                            section_config::draw(ui, state, config)
+                                        }
+                                        TabState::Apps => {
+                                            // Draw the Apps section
+                                            section_apps::draw(ui, state, config)
+                                        }
+                                        TabState::Stats => {
+                                            // Draw the Stats section
+                                            section_stats::draw(ui, state, config)
+                                        }
                                     }
-                                    TabState::Apps => {
-                                        // Draw the Apps section
-                                        section_apps::draw(ui, state, config)
-                                    }
-                                    TabState::Stats => {
-                                        // Draw the Stats section
-                                        section_stats::draw(ui, state, config)
-                                    }
+
+                                    // Just make some more space at the bottom, so error messages are not clipped
+                                    components::draw_separator(ui);
                                 });
                         });
                 });

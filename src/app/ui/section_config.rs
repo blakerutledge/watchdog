@@ -9,7 +9,6 @@ enum ButtonState {
     Disabled,
     Normal,
     Selected,
-    Error,
 }
 
 pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
@@ -100,10 +99,13 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
     ui.add_space(4.0);
 
     // Display filepath to current JSON config file
-    components::draw_row_non_interactive(
+    components::draw_row_basic(
         ui,
         state,
         "JSON Filepath",
+        //
+        // not actually editable, as this string is created every frame,
+        // and the file must be selected with the buttons
         &mut state.json.filepath.to_str().unwrap().to_string(),
     );
 
@@ -195,6 +197,7 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
                 let button_width = 18.0;
                 let num_apps = config.watched_apps.len();
                 for i in 0..config::MAX_WATCHED_APPS {
+                    let has_error = i < num_apps && !config.watched_apps[i].valid;
                     //
                     // Button State
                     let b_state = if i >= num_apps {
@@ -204,7 +207,6 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
                     } else {
                         ButtonState::Normal
                     };
-                    // To Do: Error state
 
                     // Button Wrapper
                     let (rect, response) =
@@ -230,9 +232,20 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
                             .text_style(egui::TextStyle::Name("TextButton".into()))
                             .color(match b_state {
                                 ButtonState::Disabled => COLOR_LIGHT_GREY,
-                                ButtonState::Selected => COLOR_TEXT_WHITE,
-                                ButtonState::Normal => COLOR_OFFWHITE,
-                                ButtonState::Error => COLOR_RED,
+                                ButtonState::Selected => {
+                                    if has_error {
+                                        COLOR_RED
+                                    } else {
+                                        COLOR_TEXT_WHITE
+                                    }
+                                }
+                                ButtonState::Normal => {
+                                    if has_error {
+                                        COLOR_RED
+                                    } else {
+                                        COLOR_OFFWHITE
+                                    }
+                                }
                             }),
                     );
 
@@ -245,10 +258,15 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
                     child_ui.painter().rect(
                         underline_rect,
                         0.0,
-                        if hover && b_state != ButtonState::Disabled
-                            || b_state == ButtonState::Selected
+                        if b_state != ButtonState::Disabled
+                            && (hover || b_state == ButtonState::Selected)
                         {
-                            COLOR_YELLOW
+                            // Should paint the underline... but what color?
+                            if has_error {
+                                COLOR_RED
+                            } else {
+                                COLOR_YELLOW
+                            }
                         } else {
                             COLOR_TRANSPARENT
                         },
@@ -415,26 +433,6 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
         &mut config.watched_apps[state.ui.config_watched_app_index].restart_delay,
     );
 
-    // filler for scroll testing
-    components::draw_row(
-        ui,
-        state,
-        "Restart Delay (sec)",
-        &mut config.watched_apps[state.ui.config_watched_app_index].restart_delay,
-    );
-    components::draw_row(
-        ui,
-        state,
-        "Restart Delay (sec)",
-        &mut config.watched_apps[state.ui.config_watched_app_index].restart_delay,
-    );
-    components::draw_row(
-        ui,
-        state,
-        "Restart Delay (sec)",
-        &mut config.watched_apps[state.ui.config_watched_app_index].restart_delay,
-    );
-
     components::draw_separator(ui);
 
     //
@@ -442,8 +440,7 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
     //
 
     ui.horizontal(|ui| {
-        // let visuals = ui.visuals_mut();
-        // Watched Apps Label
+        // Email Client Label group with Enabled button
         ui.allocate_ui_with_layout(
             egui::Vec2 {
                 x: ROW_LABEL_WIDTH,
@@ -458,6 +455,7 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
                 cross_justify: true,
             },
             |ui| {
+                //
                 ui.label(
                     egui::RichText::new("Email Alerts")
                         .text_style(egui::TextStyle::Name("Subheading".into()))
@@ -465,6 +463,8 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
                 );
 
                 ui.add_space(ROW_GUTTER_SPACE);
+
+                ui.toggle_value(&mut config.email_client.enabled, "Enabled");
             },
         );
     });
@@ -473,7 +473,7 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
 
     components::draw_row(ui, state, "Gmail Client", &mut config.email_client.address);
 
-    components::draw_row(
+    components::draw_row_password(
         ui,
         state,
         "Gmail Password",

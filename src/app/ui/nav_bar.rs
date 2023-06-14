@@ -8,7 +8,7 @@ const CORNER_ROUND: f32 = 4.0;
 const MARGIN: f32 = 10.0;
 const STATUS_DOT_RADIUS: f32 = 3.0;
 
-pub fn draw(context: &egui::Context, state: &mut State) {
+pub fn draw(context: &egui::Context, state: &mut State, config: &Config) {
     egui::SidePanel::left("nav_bar")
         .exact_width(COLUMN_WIDTH)
         .frame(egui::Frame::none().fill(COLOR_MED_GREY))
@@ -21,8 +21,7 @@ pub fn draw(context: &egui::Context, state: &mut State) {
                 style_imagebuttons(ui);
 
                 // Draw Config Button
-                let config_valid = true; // TO DO: make real valid / invalid status
-                draw_nav_button(ui, state, TabState::Config, config_valid);
+                draw_nav_button(ui, state, TabState::Config, config.valid);
 
                 // Draw Apps Button
                 let apps_valid = false; // TO DO: make real valid / invalid status
