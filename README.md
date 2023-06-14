@@ -13,20 +13,20 @@ Further explanation and documentation to come.
 ## TO DO:
 
 ### Config
-[ ] Email client UI spruce up
-[ ] Email client password encrypt/decrypt
-[ ] Email custom types with validation
-[ ] etc
+- [ ] Email client UI spruce up
+- [ ] Email client password encrypt/decrypt
+- [ ] Email custom types with validation
+- [ ] etc
 
 ### Apps
-[ ] Launch apps lol
-[ ] Listen for osc
-[ ] Relaunch apps
-[ ] Kill apps
-[ ] Design ui
-[ ] etc
+- [ ] Launch apps lol
+- [ ] Listen for osc
+- [ ] Relaunch apps
+- [ ] Kill apps
+- [ ] Design ui
+- [ ] etc
 
 ### Stats
-[ ] Design the ui
-[ ] Store to json file?
-[ ] etc...
+- [ ] Design the ui
+- [ ] Store to json file?
+- [ ] etc...
