@@ -101,7 +101,6 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
     // Display filepath to current JSON config file
     components::draw_row_basic(
         ui,
-        state,
         "JSON Filepath",
         //
         // not actually editable, as this string is created every frame,

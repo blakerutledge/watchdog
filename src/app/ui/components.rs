@@ -21,7 +21,7 @@ pub fn draw_row(
     label: &str,
     prop: &mut crate::app::config::ConfigData,
 ) {
-    let r = ui.horizontal(|ui| {
+    ui.horizontal(|ui| {
         // Override some styles if the element is invalid
         if !prop.valid {
             let visuals = ui.visuals_mut();
@@ -166,7 +166,7 @@ pub fn draw_row(
 //
 // Helper for drawing a standard label and text entry field
 //
-pub fn draw_row_basic(ui: &mut egui::Ui, state: &mut State, label: &str, prop: &mut String) {
+pub fn draw_row_basic(ui: &mut egui::Ui, label: &str, prop: &mut String) {
     ui.horizontal(|ui| {
         //
         // Label with minimum width
@@ -240,7 +240,7 @@ pub fn draw_row_password(
     label: &str,
     prop: &mut crate::app::config::ConfigData,
 ) {
-    let r = ui.horizontal(|ui| {
+    ui.horizontal(|ui| {
         // Override some styles if the element is invalid
         if !prop.valid {
             let visuals = ui.visuals_mut();

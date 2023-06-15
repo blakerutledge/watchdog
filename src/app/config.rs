@@ -321,7 +321,7 @@ impl Config {
     }
 
     // Compare all values and mark as dirty
-    pub fn validate_all(&mut self, state: &mut State) {
+    pub fn validate_all(&mut self) {
         // validity for entire configuration
         let mut valid = true;
 
@@ -407,7 +407,7 @@ pub fn init(state: &mut State) -> Config {
         // Initialize Config instance brand new
         let mut c = Config::default();
 
-        c.validate_all(state);
+        c.validate_all();
 
         // Write to disk
         c.write(&state.json.filepath);
@@ -428,14 +428,14 @@ pub fn init(state: &mut State) -> Config {
             // Load default config
             let mut c = Config::default();
 
-            c.validate_all(state);
+            c.validate_all();
 
             c.write(&state.json.filepath);
 
             c
         } else {
             let mut c = c.unwrap();
-            c.validate_all(state);
+            c.validate_all();
 
             c
         }
@@ -512,7 +512,7 @@ pub fn replace_from_file(file: PathBuf, state: &mut State, config: &mut Config) 
 
         // Replace config instance
         *config = c.unwrap();
-        config.validate_all(state);
+        config.validate_all();
     }
 }
 
@@ -537,6 +537,6 @@ pub fn reinit_config(state: &mut State, config: &mut Config) {
     // Reset config
     let c = Config::default();
     *config = c;
-    config.validate_all(state);
+    config.validate_all();
     config.write(&state.json.filepath);
 }
