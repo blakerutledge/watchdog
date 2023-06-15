@@ -48,6 +48,10 @@ pub fn load(state: &mut State, context: &egui::Context) {
                 TextStyle::Name("TextButton".into()),
                 FontId::new(14.0, Monospace),
             ),
+            (
+                TextStyle::Name("TextButtonSmall".into()),
+                FontId::new(12.0, Monospace),
+            ),
             (TextStyle::Heading, FontId::new(20.0, Monospace)),
             (TextStyle::Body, FontId::new(12.0, Monospace)),
             (TextStyle::Monospace, FontId::new(12.0, Monospace)),

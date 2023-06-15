@@ -356,6 +356,7 @@ pub fn draw_row_password(
                         sw: 4.0,
                     })
                     .show(ui, |ui| {
+                        ui.set_row_height(18.0);
                         ui.with_layout(
                             egui::Layout {
                                 main_dir: egui::Direction::LeftToRight,

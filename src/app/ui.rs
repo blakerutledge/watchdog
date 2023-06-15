@@ -74,9 +74,6 @@ pub fn init(
             // Draw the window Title bar area
             title_bar::draw(context, state, window);
 
-            // Draw the tool tip to allow various behaviors when exiting the app
-            exit::draw(context, state);
-
             // Draw the left side vertical navigation bar, with tabs for each section of the app
             nav_bar::draw(context, state, config);
 

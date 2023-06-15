@@ -36,13 +36,14 @@ pub fn draw(context: &egui::Context, state: &mut State, config: &Config) {
 
                 // Draw Exit Button
                 // This one does not actually have an associated tab in TabState,
-                // so we cant draw it with the helper funtion
-                ui.visuals_mut().widgets.inactive.weak_bg_fill = COLOR_TRANSPARENT;
-                let icon_exit = state.ui.textures.get("icon_exit").unwrap();
-                let r = ui.add(egui::ImageButton::new(
-                    &icon_exit.1,
-                    Vec2::new(ICON_SIZE, ICON_SIZE),
-                ));
+                // so we cant draw it with the helper funtion, but a modded one
+                let r = draw_exit_button(ui, state);
+
+                // Draw the tool tip to allow various behaviors when exiting the app
+                let anchor = r.rect.right_bottom();
+                exit::draw(context, state, anchor);
+
+                // Exit button click interactivity
                 if r.clicked() {
                     if !state.ui.exit_tooltip_clickout && !state.ui.show_exit_tooltip {
                         state.ui.show_exit_tooltip = true;
@@ -57,7 +58,7 @@ pub fn draw(context: &egui::Context, state: &mut State, config: &Config) {
 fn draw_nav_button(ui: &mut egui::Ui, state: &mut State, tab_state: TabState, is_healthy: bool) {
     //
     // Flag if this is the button for the currently active tab
-    let is_selected = state.ui.active_tab == tab_state;
+    let is_selected = state.ui.active_tab == tab_state && !state.ui.show_exit_tooltip;
 
     // Set background color
     ui.visuals_mut().widgets.inactive.weak_bg_fill = match is_selected {
@@ -126,6 +127,48 @@ fn draw_nav_button(ui: &mut egui::Ui, state: &mut State, tab_state: TabState, is
 
     // Hover cursor icon
     r.on_hover_cursor(egui::CursorIcon::PointingHand);
+}
+
+// Helper to draw a nav button, complete with styles for various states and interactivity
+fn draw_exit_button(ui: &mut egui::Ui, state: &mut State) -> egui::Response {
+    let is_selected = state.ui.show_exit_tooltip;
+
+    // Set background color
+    ui.visuals_mut().widgets.inactive.weak_bg_fill = match is_selected {
+        true => COLOR_DARK_GREY,
+        false => COLOR_TRANSPARENT,
+    };
+
+    // Store color of left side vertical bar
+    let bar_color = match is_selected {
+        true => COLOR_YELLOW,
+        false => COLOR_TRANSPARENT,
+    };
+
+    // Lookup the texture handle with the slug
+    let texture_handle = state.ui.textures.get("icon_exit").unwrap();
+
+    // Draw the ImageButton
+    let r = ui.add(egui::ImageButton::new(
+        &texture_handle.1,
+        Vec2::new(ICON_SIZE, ICON_SIZE),
+    ));
+
+    // Then draw the left hand bar
+    let mut bar = r.rect.clone();
+    bar.set_width(STATUS_DOT_RADIUS);
+    ui.painter_at(bar).rect_filled(
+        bar,
+        egui::Rounding {
+            nw: STATUS_DOT_RADIUS,
+            sw: STATUS_DOT_RADIUS,
+            ne: 0.0,
+            se: 0.0,
+        },
+        bar_color,
+    );
+
+    r
 }
 
 //
