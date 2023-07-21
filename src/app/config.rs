@@ -257,9 +257,15 @@ impl ConfigData {
             }
         }
     }
+
+    // Set validity from external tests
+    pub fn invalidate(&mut self, error: String) {
+        self.valid = false;
+        self.error = error;
+    }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub enum ConfigDataType {
     Text(String),
     Port(usize),
@@ -325,7 +331,7 @@ impl Config {
         let mut valid = true;
 
         //
-        // Validate each of the watched app configuration properties
+        // Validate each of the watched app configuration properties individually
         for w in self.watched_apps.iter_mut() {
             let mut v = true;
             v = v && w.name.validate();
@@ -346,6 +352,57 @@ impl Config {
 
             // Validity for entire config
             valid = valid && v;
+        }
+
+        // - - - - -
+        //
+        // Validate the watched app configuration properties collectively
+        //
+
+        //
+        // Port Clashing
+        //
+        let mut used_ports: Vec<usize> = Vec::new();
+        let port_clash_error = "Port already in use, must use unique port";
+        for w in self.watched_apps.iter_mut() {
+            // Test In port
+            if w.osc_in_port.valid {
+                // Extract the port value from the enum
+                if let ConfigDataType::Port(p) = w.osc_in_port.val {
+                    // Iterate over all ports used thus far, test if p is unique
+                    let mut used = false;
+                    for q in used_ports.iter() {
+                        used = used || *q == p;
+                    }
+                    // Not unique, add the error
+                    if used {
+                        w.osc_in_port.invalidate(port_clash_error.to_string());
+                    }
+                    // Is unique, add to the list
+                    else {
+                        used_ports.push(p);
+                    }
+                };
+            }
+            // Test Out port
+            if w.osc_out_port.valid {
+                // Extract the port value from the enum
+                if let ConfigDataType::Port(p) = w.osc_out_port.val {
+                    // Iterate over all ports used thus far, test if p is unique
+                    let mut used = false;
+                    for q in used_ports.iter() {
+                        used = used || *q == p;
+                    }
+                    // Not unique, add the error
+                    if used {
+                        w.osc_out_port.invalidate(port_clash_error.to_string());
+                    }
+                    // Is unique, add to the list
+                    else {
+                        used_ports.push(p);
+                    }
+                };
+            }
         }
 
         //
