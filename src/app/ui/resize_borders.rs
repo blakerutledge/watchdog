@@ -1,8 +1,8 @@
 use crate::app::ui::*;
 
 // Transparent exterior to visible window, for easier drag to resize hit area
-const BORDER_COLOR: egui::Color32 = egui::Color32::from_rgba_premultiplied(0, 0, 0, 0);
-const BORDER_THICK: f32 = 0.0;
+// const BORDER_COLOR: egui::Color32 = egui::Color32::from_rgba_premultiplied(0, 0, 0, 0);
+// const BORDER_THICK: f32 = 0.0;
 
 // Visible line around visible window
 const STROKE_COLOR: egui::Color32 = COLOR_MED_GREY;
