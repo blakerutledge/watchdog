@@ -245,49 +245,6 @@ pub fn update(event: &winit::event::Event<'_, ()>, renderer: &mut Renderer) {
                         .configure(&renderer.device, &renderer.surface_config);
                 }
             }
-            winit::event::WindowEvent::KeyboardInput {
-                device_id: _,
-                input,
-                is_synthetic: _,
-            } => {
-                if let Some(keycode) = input.virtual_keycode {
-                    let pressed = input.state == winit::event::ElementState::Pressed;
-
-                    let modifiers = renderer.platform.context().output_mut(|o| {
-                        println!("{:?}", o.copied_text);
-                    });
-
-                    if pressed {
-                        println!("{:?}, {:?}", keycode, modifiers);
-                    }
-
-                    // if pressed {
-                    //     // VirtualKeyCode::Paste etc in winit are broken/untrustworthy,
-                    //     // so we detect these things manually:
-                    //     if is_cut_command(self.egui_input.modifiers, keycode) {
-                    //         self.egui_input.events.push(egui::Event::Cut);
-                    //     } else if is_copy_command(self.egui_input.modifiers, keycode) {
-                    //         self.egui_input.events.push(egui::Event::Copy);
-                    //     } else if is_paste_command(self.egui_input.modifiers, keycode) {
-                    //         if let Some(contents) = self.clipboard.get() {
-                    //             let contents = contents.replace("\r\n", "\n");
-                    //             if !contents.is_empty() {
-                    //                 self.egui_input.events.push(egui::Event::Paste(contents));
-                    //             }
-                    //         }
-                    //     }
-                    // }
-
-                    // if let Some(key) = translate_virtual_key_code(keycode) {
-                    //     self.egui_input.events.push(egui::Event::Key {
-                    //         key,
-                    //         pressed,
-                    //         repeat: false, // egui will fill this in for us!
-                    //         modifiers: self.egui_input.modifiers,
-                    //     });
-                    // }
-                }
-            }
             _ => {}
         },
         _ => (),
