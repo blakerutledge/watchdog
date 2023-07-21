@@ -1,17 +1,19 @@
 use crate::app::ui::*;
 
 // Transparent exterior to visible window, for easier drag to resize hit area
-const BORDER_COLOR: egui::Color32 = egui::Color32::from_rgba_premultiplied(32, 32, 32, 255);
-const BORDER_THICK: f32 = 1.0;
+const BORDER_COLOR: egui::Color32 = egui::Color32::from_rgba_premultiplied(0, 0, 0, 0);
+const BORDER_THICK: f32 = 0.0;
 
 // Visible line around visible window
-const STROKE_COLOR: egui::Color32 = egui::Color32::from_rgb(40, 40, 40);
+const STROKE_COLOR: egui::Color32 = COLOR_MED_GREY;
 const STROKE_THICK: f32 = 2.0;
 
 pub fn draw(context: &egui::Context, state: &mut State) {
     //
     // Add very thin Top/Bottom/Side Panels for the invisible space around the visible window
     //
+
+    /*
     egui::TopBottomPanel::top("resize_border_top")
         .show_separator_line(false)
         .frame(egui::Frame::none())
@@ -65,6 +67,8 @@ pub fn draw(context: &egui::Context, state: &mut State) {
             resp.on_hover_and_drag_cursor(state.ui.cursor_icon);
             ui.painter_at(rect).rect_filled(rect, 0.0, BORDER_COLOR);
         });
+
+        */
 
     //
     // Add very thin Top/Bottom/Side Panels for the visible stroke around the visible window

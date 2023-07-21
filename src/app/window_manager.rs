@@ -1,4 +1,5 @@
 use winit::event_loop::EventLoop;
+use winit::platform::windows::WindowBuilderExtWindows;
 use winit::window::{ResizeDirection, Window, WindowBuilder};
 
 use std::f64;
@@ -42,6 +43,7 @@ pub fn init(event_loop: &EventLoop<()>, state: &mut State) -> Window {
         .with_decorations(false)
         .with_transparent(true)
         .with_resizable(true)
+        .with_undecorated_shadow(true)
         .with_inner_size(winit::dpi::LogicalSize {
             width: INITIAL_WIDTH,
             height: INITIAL_HEIGHT,
