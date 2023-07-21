@@ -89,7 +89,8 @@ pub fn draw_row(
                     })
                     .vertical_align(egui::Align::Center)
                     .interactive(true)
-                    .frame(true);
+                    .frame(true)
+                    .cursor_at_end(true);
 
                 // Update the state to act on any changes this frame
                 let r = ui.add(text_edit);
