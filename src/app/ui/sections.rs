@@ -60,7 +60,9 @@ pub fn draw(context: &egui::Context, state: &mut State, config: &mut Config) {
                     // Create a vertically scrolling area, that fills the window
                     egui::ScrollArea::vertical()
                         .auto_shrink([false, false])
-                        .always_show_scroll(true)
+                        .scroll_bar_visibility(
+                            egui::scroll_area::ScrollBarVisibility::AlwaysVisible,
+                        )
                         .show(ui, |ui| {
                             egui::Frame::none()
                                 // Now we have the proper nested containers in place

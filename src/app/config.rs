@@ -1,11 +1,10 @@
 use super::state::State;
 // use email_address::EmailAddress;
+use serde::{Deserialize, Serialize};
+use serde_json::Result;
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
-
-use serde::{Deserialize, Serialize};
-use serde_json::Result;
 
 const WATCHDOG_STORE_FILENAME: &str = ".watchdog_store";
 const DEFAULT_CONFIG_FILENAME: &str = "watchdog_config.json";

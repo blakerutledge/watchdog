@@ -89,7 +89,7 @@ fn update(
         perf::start_frame(state);
 
         // Draw Window UI + affect state (immediate mode)
-        renderer::render(window, renderer, ui_draw_call, state, config);
+        renderer::render(window, renderer, ui_draw_call, state, config, event);
         //
         // Note: timer is finished within the above render call
     }

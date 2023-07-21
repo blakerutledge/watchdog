@@ -6,21 +6,24 @@ edition = "2021"
 
 [dependencies]
 chrono = "0.4"
-eframe = "0.21.0"
-egui = "0.21.0"
-egui_wgpu_backend = "0.23.0"
-egui_winit_platform = "0.18.0"
+egui = "0.22.0"
+eframe = { version = "0.22.0", default-features = false, features = [
+    "default_fonts", # Embed the default egui fonts.
+    "wgpu",          # Use the glow rendering backend. Alternative: "wgpu".
+] }
+egui_wgpu_backend = "0.24.0"
+egui_winit_platform = "0.19.0"
 email_address = "0.2.4"
 env_logger = "0.10.0"
 epi = "0.17.0"
 image = "0.24.6"
-muda = "0.5.0"
+muda = "0.6.0"
 pollster = "0.3.0"
 rfd = "0.11.4"
 rosc = "0.10.1"
 serde = "1.0.163"
 serde_json = "1.0.96"
-tray-icon = "0.5.1"
+tray-icon = "0.6.0"
 wgpu = "0.16.1"
 windows-sys = "0.48.0"
 winit = { version = "0.28.6", features = ["x11"] }
