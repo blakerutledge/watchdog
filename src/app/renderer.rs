@@ -132,9 +132,6 @@ pub fn render(
     config: &mut super::config::Config,
     event: &winit::event::Event<'_, ()>,
 ) {
-    // Pass the winit events to the platform integration.
-    renderer.platform.handle_event(&event);
-
     let start_time = Instant::now();
 
     renderer
