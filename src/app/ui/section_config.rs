@@ -99,7 +99,7 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
     ui.add_space(4.0);
 
     // Display filepath to current JSON config file
-    components::draw_row_basic(
+    components::draw_row_static(
         ui,
         "JSON Filepath",
         //
@@ -431,6 +431,47 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, config: &mut Config) {
         "Restart Delay (sec)",
         &mut config.watched_apps[state.ui.config_watched_app_index].restart_delay,
     );
+
+    components::draw_separator(ui);
+
+    //
+    // PC Reboot
+    //
+
+    ui.horizontal(|ui| {
+        // PC Reboot Schedule Label group with Enabled button
+        ui.allocate_ui_with_layout(
+            egui::Vec2 {
+                x: ROW_LABEL_WIDTH,
+                y: ROW_HEIGHT,
+            },
+            egui::Layout {
+                main_dir: egui::Direction::LeftToRight,
+                main_wrap: false,
+                main_align: egui::Align::LEFT,
+                main_justify: true,
+                cross_align: egui::Align::Center,
+                cross_justify: true,
+            },
+            |ui| {
+                //
+                ui.label(
+                    egui::RichText::new("PC Reboot Schedule")
+                        .text_style(egui::TextStyle::Name("Subheading".into()))
+                        .color(COLOR_TEXT_WHITE),
+                );
+
+                ui.add_space(ROW_GUTTER_SPACE);
+
+                // TO DO create new values in config
+                ui.toggle_value(&mut config.email_client.enabled, "Enabled");
+            },
+        );
+    });
+
+    ui.add_space(ROW_MARGIN);
+
+    components::draw_row(ui, state, "Reboot Chron", &mut config.email_client.address);
 
     components::draw_separator(ui);
 

@@ -54,7 +54,11 @@ pub fn draw_row(
             |ui| {
                 //
                 // Draw the label
-                ui.label(egui::RichText::new(label).color(COLOR_OFFWHITE));
+                ui.label(egui::RichText::new(label).color(if prop.valid {
+                    COLOR_OFFWHITE
+                } else {
+                    COLOR_RED
+                }));
 
                 // Add margin between label and text entry field
                 ui.add_space(ROW_GUTTER_SPACE);
@@ -167,7 +171,7 @@ pub fn draw_row(
 //
 // Helper for drawing a standard label and text entry field
 //
-pub fn draw_row_basic(ui: &mut egui::Ui, label: &str, prop: &mut String) {
+pub fn draw_row_static(ui: &mut egui::Ui, label: &str, prop: &mut String) {
     ui.horizontal(|ui| {
         //
         // Label with minimum width
@@ -218,7 +222,7 @@ pub fn draw_row_basic(ui: &mut egui::Ui, label: &str, prop: &mut String) {
                     .margin(egui::Vec2::new(16.0, 0.0))
                     .text_color(COLOR_TEXT_WHITE)
                     .vertical_align(egui::Align::Center)
-                    .interactive(true)
+                    .interactive(false)
                     .frame(false);
 
                 // Update the state to act on any changes this frame

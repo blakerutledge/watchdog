@@ -101,7 +101,7 @@ impl WatchedApp {
             run: ConfigData::new_text("demo.exe"),
             osc_in_port: ConfigData::new_port(1234),
             osc_out_port: ConfigData::new_port(1235),
-            heartbeat_channel: ConfigData::new_text("/heart"),
+            heartbeat_channel: ConfigData::new_channel("/heart"),
             heartbeat_interval: ConfigData::new_seconds(1),
             heartbeat_timeout: ConfigData::new_seconds(5),
             startup_timeout: ConfigData::new_seconds(30),
@@ -133,6 +133,16 @@ impl ConfigData {
         }
     }
 
+    pub fn new_channel(val: &str) -> Self {
+        ConfigData {
+            str: val.to_string(),
+            val: ConfigDataType::Channel(val.to_string()),
+            dirty: false,
+            valid: false,
+            error: String::new(),
+        }
+    }
+
     pub fn new_port(val: usize) -> Self {
         ConfigData {
             str: val.to_string(),
@@ -157,10 +167,58 @@ impl ConfigData {
     pub fn validate(&mut self) -> bool {
         match self.val {
             ConfigDataType::Text(ref mut data) => {
-                // move the UI string into the data type
-                *data = self.str.to_string();
+                let s = self.str.to_string();
+                let count = s.chars().count();
 
-                self.valid = true;
+                let not_empty = count != 0;
+
+                self.valid = not_empty;
+
+                if !not_empty {
+                    self.error = "Value must not be empty.".to_string();
+                } else {
+                    self.error.clear();
+                }
+
+                // move the UI string into the data type
+                if self.valid {
+                    *data = s;
+                } else {
+                    data.clear();
+                }
+
+                self.dirty = false;
+
+                self.valid
+            }
+            ConfigDataType::Channel(ref mut data) => {
+                // move the UI string into the data type
+                let s = self.str.to_string();
+                let count = s.chars().count();
+
+                let not_empty = count != 0;
+                let beginning_slash = s.starts_with("/");
+                let chars_after_slash = count >= 2;
+
+                self.valid = beginning_slash && chars_after_slash;
+
+                if !not_empty {
+                    self.error = "Value must not be empty.".to_string();
+                } else if !beginning_slash {
+                    self.error = "OSC Channel must begin with a slash.".to_string();
+                } else if !chars_after_slash {
+                    self.error =
+                        "OSC Channel must have at least one character after the slash.".to_string();
+                } else {
+                    self.error.clear();
+                }
+
+                if self.valid {
+                    *data = s;
+                } else {
+                    data.clear();
+                }
+
                 self.dirty = false;
 
                 self.valid
@@ -182,21 +240,14 @@ impl ConfigData {
                 // valid range
                 let in_range = 1024 <= port && port <= 9999;
 
-                //
-                // TO DO: make sure port is not used by any other config
-                //
-                let available = true;
-
                 // SET validity
-                self.valid = valid_int && in_range && available;
+                self.valid = valid_int && in_range;
 
                 // ADD errors for ui
                 if !valid_int {
                     self.error = "Port must be a valid positive integer.".to_string();
                 } else if !in_range {
                     self.error = "Port must be in between 1024 and 9999.".to_string();
-                } else if !available {
-                    self.error = "Port is already in use.".to_string();
                 } else {
                     self.error.clear();
                 }
@@ -268,6 +319,7 @@ impl ConfigData {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub enum ConfigDataType {
     Text(String),
+    Channel(String),
     Port(usize),
     Seconds(usize),
 }
@@ -498,15 +550,6 @@ pub fn init(state: &mut State) -> Config {
     };
 
     c
-
-    /*
-    let email = Email {
-        startup_success: vec![EmailAddress::from_str("blake@blakerutledge.com").unwrap()],
-        startup_failure: vec![EmailAddress::from_str("blake@blakerutledge.com").unwrap()],
-        non_responsive: vec![EmailAddress::from_str("blake@blakerutledge.com").unwrap()],
-        email_limit_per_day: 3,
-    };
-    */
 }
 
 pub fn create_watched_app(config: &mut Config, state: &mut State) {

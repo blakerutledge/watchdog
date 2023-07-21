@@ -1,11 +1,13 @@
 use std::collections::HashMap;
 use winit::event_loop::{ControlFlow, EventLoop, EventLoopBuilder};
 
+mod apps;
 mod config;
 mod osc_manager;
 mod perf;
 mod renderer;
 mod state;
+mod stats;
 mod tray_manager;
 mod ui;
 mod window_manager;
@@ -19,8 +21,8 @@ pub fn init() {
     let mut state = state::init();
 
     let mut config = config::init(&mut state);
-
-    // let osc = osc_manager::init();
+    let mut apps = apps::init();
+    let mut stats = stats::init();
 
     // Create shared event loop for winit + egui + tray-icon events
     // winit::event_loop::EventLoopBuilder::<Event>::with_user_event().build();
@@ -52,6 +54,8 @@ pub fn init() {
             &mut renderer,
             &mut ui_draw_call,
             &mut config,
+            &mut apps,
+            &mut stats,
             &mut state,
         )
     });
@@ -71,6 +75,8 @@ fn update(
         dyn FnMut(&egui::Context, &mut state::State, &mut config::Config, &winit::window::Window),
     >,
     config: &mut config::Config,
+    _apps: &mut apps::Apps,
+    _stats: &mut stats::Stats,
     state: &mut state::State,
 ) {
     // Renderer handles a few various winit events outside of redrawing
@@ -89,7 +95,7 @@ fn update(
         perf::start_frame(state);
 
         // Draw Window UI + affect state (immediate mode)
-        renderer::render(window, renderer, ui_draw_call, state, config, event);
+        renderer::render(window, renderer, ui_draw_call, state, config);
         //
         // Note: timer is finished within the above render call
     }

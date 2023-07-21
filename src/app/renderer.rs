@@ -130,7 +130,6 @@ pub fn render(
     >,
     state: &mut super::state::State,
     config: &mut super::config::Config,
-    event: &winit::event::Event<'_, ()>,
 ) {
     let start_time = Instant::now();
 
