@@ -1,5 +1,5 @@
 use crate::app::ui::*;
-pub fn draw(ui: &mut egui::Ui, _state: &mut State, _config: &mut Config) {
+pub fn draw(ui: &mut egui::Ui, state: &mut State, _config: &mut Config) {
     ui.allocate_ui_with_layout(
         egui::Vec2 {
             x: ui.available_width(),
@@ -21,4 +21,28 @@ pub fn draw(ui: &mut egui::Ui, _state: &mut State, _config: &mut Config) {
     );
 
     ui.add_space(SECTION_HEADING_MARGIN);
+
+    ui.add_space(5.0);
+    let r = ui.button("build listeners");
+    if r.clicked() {
+        state.actions.build_listeners = true;
+    }
+
+    ui.add_space(5.0);
+    let r = ui.button("destroy listeners");
+    if r.clicked() {
+        state.actions.destroy_listeners = true;
+    }
+
+    ui.add_space(5.0);
+    let r = ui.button("start apps");
+    if r.clicked() {
+        state.actions.start_apps = true;
+    }
+
+    ui.add_space(5.0);
+    let r = ui.button("stop apps");
+    if r.clicked() {
+        state.actions.stop_apps = true;
+    }
 }

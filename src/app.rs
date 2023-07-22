@@ -75,8 +75,8 @@ fn update(
         dyn FnMut(&egui::Context, &mut state::State, &mut config::Config, &winit::window::Window),
     >,
     config: &mut config::Config,
-    _apps: &mut apps::Apps,
-    _stats: &mut stats::Stats,
+    apps: &mut apps::Apps,
+    stats: &mut stats::Stats,
     state: &mut state::State,
 ) {
     // Renderer handles a few various winit events outside of redrawing
@@ -104,7 +104,7 @@ fn update(
     if window.is_visible().unwrap_or(false) {
         *control_flow = winit::event_loop::ControlFlow::Poll;
     }
-    // If the window is close, and the app is running in the background,
+    // If the window is closed, and the app is running in the background,
     // manually throttle the event loop to ~60Hz
     else {
         *control_flow = winit::event_loop::ControlFlow::WaitUntil(
@@ -113,7 +113,7 @@ fn update(
     }
 
     // Apply any changes to the state
-    apply(control_flow, window, tray, state, config);
+    apply(control_flow, window, tray, state, config, apps, stats);
 }
 
 ///
@@ -125,6 +125,8 @@ fn apply(
     tray: &mut tray_icon::TrayIcon,
     state: &mut state::State,
     config: &mut config::Config,
+    apps: &mut apps::Apps,
+    _stats: &mut stats::Stats,
     // renderer: &mut renderer::Renderer,
     // tray_menu: &HashMap<String, tray_manager::MenuElement>,
     // ui_draw_call: &mut Box<dyn FnMut(&egui::Context, &mut state::State)>,
@@ -170,6 +172,30 @@ fn apply(
         state.actions.config_edited = false;
         config.validate_all();
         config.write(&state.json.filepath);
+    }
+
+    // Build Apps Listeners has been requested
+    if state.actions.build_listeners {
+        state.actions.build_listeners = false;
+        apps.build_listeners(&config);
+    }
+
+    // Destroy Apps Listeners has been requested
+    if state.actions.destroy_listeners {
+        state.actions.destroy_listeners = false;
+        apps.destroy_listeners();
+    }
+
+    // Start apps has been requested
+    if state.actions.start_apps {
+        state.actions.start_apps = false;
+        apps.start_apps();
+    }
+
+    // Stop apps has been requested
+    if state.actions.stop_apps {
+        state.actions.stop_apps = false;
+        apps.stop_apps();
     }
 }
 
