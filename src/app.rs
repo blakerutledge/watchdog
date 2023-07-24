@@ -185,18 +185,6 @@ fn apply(
         state.actions.destroy_listeners = false;
         apps.destroy_listeners();
     }
-
-    // Start apps has been requested
-    if state.actions.start_apps {
-        state.actions.start_apps = false;
-        apps.start_apps();
-    }
-
-    // Stop apps has been requested
-    if state.actions.stop_apps {
-        state.actions.stop_apps = false;
-        apps.stop_apps();
-    }
 }
 
 ///

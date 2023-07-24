@@ -111,14 +111,10 @@ impl Apps {
 
     pub fn build_listeners(&mut self, config: &config::Config) {
         if self.watching {
-            println!("Cannot rebuild active listeners");
+            println!("Cannot rebuild already running listeners");
             return;
         }
-
-        if self.valid_listeners {
-            println!("Cannot build listeners, they are already built");
-            return;
-        }
+        self.watching = true;
 
         println!(
             "Building listeners for each watched app, total of: {}",
@@ -131,53 +127,25 @@ impl Apps {
         }
 
         self.valid_listeners = true;
-    }
-
-    pub fn destroy_listeners(&mut self) {
-        if !self.valid_listeners {
-            println!("Cannot destroy listeners, they are not yet built");
-            return;
-        }
-
-        println!("TODO: destroy listeners");
-        //
-        // Is this enough to drop them?
-        //
-        self.watched_apps.clear();
-
-        self.valid_listeners = false;
-
-        if self.watching {
-            self.watching = false;
-
-            println!("Abandoning already running apps");
-        }
-    }
-
-    pub fn start_apps(&mut self) {
-        if !self.valid_listeners {
-            println!("Cannot start apps without valid listeners");
-            return;
-        }
 
         println!("Starting apps");
         for a in self.watched_apps.iter_mut() {
             a.start();
         }
-
-        self.watching = true;
     }
 
-    pub fn stop_apps(&mut self) {
+    pub fn destroy_listeners(&mut self) {
         if !self.watching {
             println!("Cannot stop apps when they are not yet running");
             return;
         }
-
         self.watching = false;
         for a in self.watched_apps.iter_mut() {
             a.stop();
         }
+
+        // Is this enough to drop them..?
+        self.watched_apps.clear();
     }
 }
 

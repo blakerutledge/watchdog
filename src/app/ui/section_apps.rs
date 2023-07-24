@@ -33,16 +33,4 @@ pub fn draw(ui: &mut egui::Ui, state: &mut State, _config: &mut Config) {
     if r.clicked() {
         state.actions.destroy_listeners = true;
     }
-
-    ui.add_space(5.0);
-    let r = ui.button("start apps");
-    if r.clicked() {
-        state.actions.start_apps = true;
-    }
-
-    ui.add_space(5.0);
-    let r = ui.button("stop apps");
-    if r.clicked() {
-        state.actions.stop_apps = true;
-    }
 }

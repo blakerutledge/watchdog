@@ -33,8 +33,6 @@ pub struct Actions {
     pub window_maximize: bool,
     pub window_unmaximize: bool,
     pub config_edited: bool,
-    pub start_apps: bool,
-    pub stop_apps: bool,
     pub build_listeners: bool,
     pub destroy_listeners: bool,
 }
@@ -94,8 +92,6 @@ pub fn init() -> State {
         window_maximize: false,
         window_unmaximize: false,
         config_edited: false,
-        start_apps: false,
-        stop_apps: false,
         build_listeners: false,
         destroy_listeners: false,
     };
