@@ -16,18 +16,23 @@ Further explanation and documentation to come.
 # TO DO:
 
 ### Config
+- [ ] Overlay to not change config while apps are running, kill button here
+- [ ] PC Reboot chron task
+- [ ] PC run on startup
+- [ ] Group name: kill & start apps together if names match
 - [ ] Email client UI spruce up
-- [ ] Email client password encrypt/decrypt
+- [ ] Email client password encrypt/decrypt but store in local json
 - [ ] Email custom types with validation
-- [ ] etc
+- [ ] and more..
 
 ### Apps
-- [ ] Launch apps lol
-- [ ] Listen for osc
+- [x] Send/Recv osc via threads for each watched app
+- [ ] Timing engine thing, for heartbeat timeouts, restart delays etc
+- [ ] Launch apps via CMD strings to execute..?
+- [ ] Kill apps via PID
 - [ ] Relaunch apps
-- [ ] Kill apps
 - [ ] Design ui
-- [ ] etc
+- [ ] and more..
 
 ### Stats
 - [ ] Design the ui
