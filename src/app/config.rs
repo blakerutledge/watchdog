@@ -79,7 +79,7 @@ impl Store {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct WatchedApp {
     pub valid: bool,
     pub name: ConfigData,
@@ -110,7 +110,7 @@ impl WatchedApp {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ConfigData {
     pub str: String,
     pub val: ConfigDataType,
@@ -322,6 +322,51 @@ pub enum ConfigDataType {
     Channel(String),
     Port(usize),
     Seconds(usize),
+}
+
+impl From<&ConfigDataType> for u16 {
+    fn from(value: &ConfigDataType) -> Self {
+        match value {
+            ConfigDataType::Port(p) => p.clone() as u16,
+            ConfigDataType::Seconds(s) => s.clone() as u16,
+            _ => {
+                println!(
+                    "Warning, casting invalid ConfigDataType into u16, using default value of 0"
+                );
+                0 as u16
+            }
+        }
+    }
+}
+
+impl From<&ConfigDataType> for u64 {
+    fn from(value: &ConfigDataType) -> Self {
+        match value {
+            ConfigDataType::Port(p) => p.clone() as u64,
+            ConfigDataType::Seconds(s) => s.clone() as u64,
+            _ => {
+                println!(
+                    "Warning, casting invalid ConfigDataType into u64, using default value of 0"
+                );
+                0 as u64
+            }
+        }
+    }
+}
+
+impl From<&ConfigDataType> for String {
+    fn from(value: &ConfigDataType) -> Self {
+        match value {
+            ConfigDataType::Text(t) => t.clone(),
+            ConfigDataType::Channel(c) => c.clone(),
+            _ => {
+                println!(
+                    "Warning, casting invalid ConfigDataType into String, using default value of empty string"
+                );
+                "".to_string()
+            }
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]

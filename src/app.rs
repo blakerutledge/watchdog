@@ -3,7 +3,7 @@ use winit::event_loop::{ControlFlow, EventLoop, EventLoopBuilder};
 
 mod apps;
 mod config;
-mod osc_manager;
+mod osc;
 mod perf;
 mod renderer;
 mod state;
